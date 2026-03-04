@@ -7,12 +7,19 @@ const LoginPage = lazy(() =>
   }))
 );
 
+const HomePage = lazy(() =>
+  import("@/pages/home/HomePage.tsx").then((module) => ({
+    default: module.HomePage,
+  }))
+);
+
 function PublicRouter() {
   return (
     <BrowserRouter>
       <Suspense>
         <Routes>
           <Route path="/" element={<LoginPage />} />
+          <Route path="/home" element={<HomePage />} />
         </Routes>
       </Suspense>
     </BrowserRouter>
