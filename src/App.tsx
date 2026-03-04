@@ -1,7 +1,8 @@
 import "./App.css";
+import { PublicRouter } from "@/routers";
 
 function App() {
-  return <></>;
+  return <PublicRouter />;
 }
 
 export default App;
