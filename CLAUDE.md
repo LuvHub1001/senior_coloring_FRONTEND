@@ -96,14 +96,49 @@ import { Button } from "../../components";
 
 ## Barrel Export (Tree-shaking)
 
-- 각 폴더에 반드시 `index.ts` 작성
-- 외부에서는 항상 `index.ts`를 통해 import
+- 각 폴더에 반드시 `index.ts` 작성 (빈 폴더라도 placeholder 주석과 함께 생성)
+- 외부에서는 항상 `@/폴더명` 을 통해 import
+- `index.ts`에서는 각 파일을 named import 후 re-export
+- 하위 폴더가 있는 경우, 하위 `index.ts`를 통해 체이닝
 
 ```ts
-// src/components/index.ts
-export { Button } from "./Button";
-export { Header } from "./Header";
-export { Footer } from "./Footer";
+// src/components/login/index.ts (하위 폴더 barrel)
+import { LoginLanding } from "@/components/login/LoginLanding.tsx";
+
+export { LoginLanding };
+```
+
+```ts
+// src/components/index.ts (루트 barrel — 하위 barrel을 체이닝)
+import { LoginLanding } from "@/components/login";
+
+export { LoginLanding };
+```
+
+```tsx
+// 외부에서 사용할 때
+// ✅ Good
+import { LoginLanding } from "@/components";
+
+// ❌ Bad - 직접 경로로 import 금지
+import LoginLanding from "@/components/login/LoginLanding.tsx";
+```
+
+### lazy import 예외
+
+- Router에서 `lazy()` 사용 시에는 barrel이 아닌 **파일 직접 경로**로 import
+- barrel을 통하면 code splitting 효과가 사라지므로 예외 허용
+
+```tsx
+// ✅ Good - lazy import는 파일 직접 참조
+const LoginPage = lazy(() =>
+  import("@/pages/login/LoginPage.tsx").then((module) => ({
+    default: module.LoginPage,
+  }))
+);
+
+// ❌ Bad - barrel을 통한 lazy import (code splitting 무효화)
+const LoginPage = lazy(() => import("@/pages"));
 ```
 
 ---
@@ -126,6 +161,9 @@ function Button({ label, onClick }: ButtonProps) {
 }
 
 export default Button;
+
+// ❌ Bad - export default를 함수 선언과 함께 작성하지 말 것
+export default function Button() {}
 ```
 
 ---
