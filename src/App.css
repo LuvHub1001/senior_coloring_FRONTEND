@@ -1,1 +1,14 @@
 @import "tailwindcss";
+
+@font-face {
+  font-family: "Pretendard-Regular.woff2";
+  src:
+    local("Pretendard Regular"), url("./assets/fonts/Pretendard-Regular.woff2"),
+    format("woff2");
+  font-display: "swap";
+  font-weight: 200;
+}
+
+* {
+  font-family: "Pretendard-Regular";
+}
