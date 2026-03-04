@@ -4,6 +4,7 @@ import sample3 from "@images/login/sample3.png";
 import sample4 from "@images/login/sample4.png";
 import sample5 from "@images/login/sample5.png";
 import character from "@images/login/character.png";
+import { useImageCarousel } from "@/hooks";
 
 interface LoginLandingProps {
   onKakaoLogin?: () => void;
@@ -20,6 +21,8 @@ function LoginLanding({
   onTermsClick,
   onPrivacyClick,
 }: LoginLandingProps) {
+  const { containerRef, repeatCount } = useImageCarousel(sampleImages.length, 0.5);
+
   return (
     <div className="flex flex-col min-h-dvh bg-[#F9FAFB] relative overflow-hidden">
       {/* 히어로 섹션 */}
@@ -37,20 +40,25 @@ function LoginLanding({
         </div>
 
         {/* 도안 이미지 캐러셀 */}
-        <div className="relative w-full h-[297px]">
-          <div className="absolute flex gap-[30px] items-center top-[48px] left-1/2 -translate-x-1/2">
-            {sampleImages.map((src, i) => (
-              <div
-                key={i}
-                className="size-[120px] rounded-[24px] shrink-0 overflow-hidden border-2 border-[#ebebeb]"
-              >
-                <img
-                  src={src}
-                  alt={`컬러링 샘플 ${i + 1}`}
-                  className="size-full object-cover"
-                />
-              </div>
-            ))}
+        <div className="relative w-full h-[297px] overflow-hidden">
+          <div
+            ref={containerRef}
+            className="absolute flex gap-[30px] items-center top-[48px]"
+          >
+            {Array.from({ length: repeatCount }, (_, setIndex) =>
+              sampleImages.map((src, i) => (
+                <div
+                  key={`${setIndex}-${i}`}
+                  className="size-[120px] rounded-[24px] shrink-0 overflow-hidden border-2 border-[#ebebeb]"
+                >
+                  <img
+                    src={src}
+                    alt={`컬러링 샘플 ${i + 1}`}
+                    className="size-full object-cover"
+                  />
+                </div>
+              ))
+            )}
           </div>
 
           {/* 캐릭터 일러스트 */}
