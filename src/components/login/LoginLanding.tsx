@@ -8,7 +8,7 @@ import { useImageCarousel } from "@/hooks";
 
 interface LoginLandingProps {
   onKakaoLogin?: () => void;
-  onPhoneLogin?: () => void;
+  onNaverLogin?: () => void;
   onTermsClick?: () => void;
   onPrivacyClick?: () => void;
 }
@@ -17,7 +17,7 @@ const sampleImages = [sample1, sample2, sample3, sample4, sample5];
 
 function LoginLanding({
   onKakaoLogin,
-  onPhoneLogin,
+  onNaverLogin,
   onTermsClick,
   onPrivacyClick,
 }: LoginLandingProps) {
@@ -79,7 +79,7 @@ function LoginLanding({
           <button
             type="button"
             onClick={onKakaoLogin}
-            className="flex items-center justify-center gap-4 w-full h-[56px] bg-[#FFE656] rounded-[12px] cursor-pointer"
+            className="flex items-center gap-4 w-full h-[56px] bg-[#FEE500] rounded-[12px] px-5 cursor-pointer"
           >
             <svg
               width="20"
@@ -87,6 +87,7 @@ function LoginLanding({
               viewBox="0 0 20 20"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              className="shrink-0"
             >
               <path
                 fillRule="evenodd"
@@ -95,16 +96,18 @@ function LoginLanding({
                 fill="#3C1E1E"
               />
             </svg>
-            <span className="text-[17px] font-semibold text-[#191F28] tracking-[-0.085px] leading-[25.5px]">
-              카카오로 3초만에 시작하기
+            <span className="flex-1 text-[17px] font-semibold text-[#191F28] tracking-[-0.085px] leading-[25.5px] text-center">
+              카카오톡 시작하기
             </span>
+            {/* 텍스트 중앙 정렬용 균형 요소 */}
+            <div className="size-5 shrink-0 opacity-0" />
           </button>
 
-          {/* 휴대폰 번호 로그인 버튼 */}
+          {/* 네이버 로그인 버튼 */}
           <button
             type="button"
-            onClick={onPhoneLogin}
-            className="flex items-center justify-center gap-4 w-full h-[56px] bg-white border border-[#D1D6DB] rounded-[12px] cursor-pointer"
+            onClick={onNaverLogin}
+            className="flex items-center gap-4 w-full h-[56px] bg-[#03C75A] rounded-[12px] px-5 cursor-pointer"
           >
             <svg
               width="20"
@@ -112,18 +115,19 @@ function LoginLanding({
               viewBox="0 0 20 20"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
+              className="shrink-0"
             >
               <path
-                d="M4.167 3.333A1.667 1.667 0 0 1 5.833 1.667h8.334A1.667 1.667 0 0 1 15.833 3.333v13.334a1.667 1.667 0 0 1-1.666 1.666H5.833a1.667 1.667 0 0 1-1.666-1.666V3.333Zm5.833 12.5a.833.833 0 1 0 0 1.667.833.833 0 0 0 0-1.667Z"
-                stroke="#191F28"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                d="M13.54 10.74L6.27 0H0v20h6.46V9.26L13.73 20H20V0h-6.46v10.74Z"
+                fill="white"
+                transform="scale(0.8) translate(2.5, 2.5)"
               />
             </svg>
-            <span className="text-[17px] font-semibold text-[#191F28] tracking-[-0.085px] leading-[25.5px]">
-              휴대폰 번호로 시작하기
+            <span className="flex-1 text-[17px] font-semibold text-white tracking-[-0.085px] leading-[25.5px] text-center">
+              네이버로 시작하기
             </span>
+            {/* 텍스트 중앙 정렬용 균형 요소 */}
+            <div className="size-5 shrink-0 opacity-0" />
           </button>
         </div>
 
