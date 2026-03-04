@@ -97,13 +97,25 @@ import { Button } from "../../components";
 ## Barrel Export (Tree-shaking)
 
 - 각 폴더에 반드시 `index.ts` 작성
-- 외부에서는 항상 `index.ts`를 통해 import
+- 외부에서는 항상 `@/폴더명` 을 통해 import
+- `index.ts`에서는 각 파일을 named import 후 re-export
 
 ```ts
 // src/components/index.ts
-export { Button } from "./Button";
-export { Header } from "./Header";
-export { Footer } from "./Footer";
+import { LoginLanding } from "@/components/LoginLanding.tsx";
+import { Header } from "@/components/Header.tsx";
+
+export { LoginLanding };
+export { Header };
+```
+
+```tsx
+// 외부에서 사용할 때
+// ✅ Good
+import { LoginLanding } from "@/components";
+
+// ❌ Bad - 직접 경로로 import 금지
+import LoginLanding from "@/components/LoginLanding.tsx";
 ```
 
 ---
@@ -126,6 +138,9 @@ function Button({ label, onClick }: ButtonProps) {
 }
 
 export default Button;
+
+// ❌ Bad - export default를 함수 선언과 함께 작성하지 말 것
+export default function Button() {}
 ```
 
 ---
