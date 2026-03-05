@@ -1,0 +1,160 @@
+interface ColoringToolBarProps {
+  canUndo: boolean;
+  canRedo: boolean;
+  selectedColor: string;
+  isPaletteActive?: boolean;
+  isCollapsed?: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
+  onPalette: () => void;
+  onGuide: () => void;
+  onCollapse: () => void;
+}
+
+function ColoringToolBar({
+  canUndo,
+  canRedo,
+  selectedColor,
+  isPaletteActive = false,
+  isCollapsed = false,
+  onUndo,
+  onRedo,
+  onPalette,
+  onGuide,
+  onCollapse,
+}: ColoringToolBarProps) {
+  return (
+    <div className="flex items-center justify-between px-5 pb-4 pt-3">
+      {/* 이전 (Undo) */}
+      <ToolButton
+        label="이전"
+        disabled={!canUndo}
+        onClick={onUndo}
+        icon={
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12.5 5L7.5 10L12.5 10" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M7.5 6.67V13.33C7.5 14.25 8.25 15 9.17 15H15" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        }
+      />
+
+      {/* 복구 (Redo) */}
+      <ToolButton
+        label="복구"
+        disabled={!canRedo}
+        onClick={onRedo}
+        icon={
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7.5 5L12.5 10L7.5 10" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M12.5 6.67V13.33C12.5 14.25 11.75 15 10.83 15H5" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        }
+      />
+
+      {/* 팔레트 — 접힘 시 선택 색상 원으로 표시 */}
+      {isCollapsed ? (
+        <button
+          type="button"
+          onClick={onPalette}
+          className="flex w-14 flex-col items-center gap-1 cursor-pointer"
+        >
+          <div
+            className="shrink-0 rounded-full border-[1.67px] p-[3.33px]"
+            style={{ borderColor: selectedColor }}
+          >
+            <div
+              className="size-[33.33px] rounded-full"
+              style={{ backgroundColor: selectedColor }}
+            />
+          </div>
+          <span className="text-[10px] font-bold text-[#6B7684] tracking-[-0.05px] leading-[12px]">
+            팔레트
+          </span>
+        </button>
+      ) : (
+        <ToolButton
+          label="팔레트"
+          active={isPaletteActive}
+          onClick={onPalette}
+          icon={
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 1.67C5.4 1.67 1.67 5.4 1.67 10C1.67 14.6 5.4 18.33 10 18.33C10.92 18.33 11.67 17.58 11.67 16.67V15.83C11.67 15.42 11.83 15.05 12.1 14.78C12.37 14.51 12.42 14.1 12.2 13.78C11.98 13.46 12.03 13.05 12.3 12.78C12.57 12.51 12.92 12.37 13.33 12.37H15C16.84 12.37 18.33 10.88 18.33 9.03C18.33 4.97 14.6 1.67 10 1.67Z" stroke={isPaletteActive ? "white" : "#6B7684"} strokeWidth="1.5" />
+              <circle cx="5.83" cy="10" r="0.83" fill={isPaletteActive ? "white" : "#6B7684"} />
+              <circle cx="8.33" cy="6.67" r="0.83" fill={isPaletteActive ? "white" : "#6B7684"} />
+              <circle cx="11.67" cy="6.67" r="0.83" fill={isPaletteActive ? "white" : "#6B7684"} />
+              <circle cx="14.17" cy="8.33" r="0.83" fill={isPaletteActive ? "white" : "#6B7684"} />
+            </svg>
+          }
+        />
+      )}
+
+      {/* 안내 */}
+      <ToolButton
+        label="안내"
+        onClick={onGuide}
+        icon={
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="10" cy="10" r="8.33" stroke="#6B7684" strokeWidth="1.5" />
+            <path d="M10 9.17V14.17" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" />
+            <circle cx="10" cy="6.67" r="0.83" fill="#6B7684" />
+          </svg>
+        }
+      />
+
+      {/* 접기 / 열기 */}
+      <ToolButton
+        label={isCollapsed ? "열기" : "접기"}
+        onClick={onCollapse}
+        icon={
+          isCollapsed ? (
+            /* 열기: 위 화살표 + 아래 선 */
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5 12L10 7L15 12" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M5 16H15" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          ) : (
+            /* 접기: 아래 화살표 + 위 선 */
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5 8L10 13L15 8" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M5 4H15" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          )
+        }
+      />
+    </div>
+  );
+}
+
+interface ToolButtonProps {
+  label: string;
+  icon: React.ReactNode;
+  disabled?: boolean;
+  active?: boolean;
+  onClick: () => void;
+}
+
+function ToolButton({ label, icon, disabled = false, active = false, onClick }: ToolButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`flex w-14 flex-col items-center gap-1 cursor-pointer ${
+        disabled ? "opacity-40" : ""
+      }`}
+    >
+      <div
+        className={`flex size-10 items-center justify-center rounded-[13px] ${
+          active ? "bg-[#4E5968]" : "bg-[rgba(2,32,71,0.05)]"
+        }`}
+      >
+        {icon}
+      </div>
+      <span className="text-[10px] font-bold text-[#6B7684] tracking-[-0.05px] leading-[12px]">
+        {label}
+      </span>
+    </button>
+  );
+}
+
+export { ColoringToolBar };
