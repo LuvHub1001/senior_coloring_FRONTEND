@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ScrollToTop } from "@/components";
 
 const LoginPage = lazy(() =>
   import("@/pages/login/LoginPage.tsx").then((module) => ({
@@ -13,13 +14,35 @@ const HomePage = lazy(() =>
   }))
 );
 
+const ColoringBookPage = lazy(() =>
+  import("@/pages/coloring/ColoringBookPage.tsx").then((module) => ({
+    default: module.ColoringBookPage,
+  }))
+);
+
+const ColoringPlayPage = lazy(() =>
+  import("@/pages/coloringPlay/ColoringPlayPage.tsx").then((module) => ({
+    default: module.ColoringPlayPage,
+  }))
+);
+
+const CompletionPage = lazy(() =>
+  import("@/pages/completion/CompletionPage.tsx").then((module) => ({
+    default: module.CompletionPage,
+  }))
+);
+
 function PublicRouter() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Suspense>
         <Routes>
           <Route path="/" element={<LoginPage />} />
           <Route path="/home" element={<HomePage />} />
+          <Route path="/coloring" element={<ColoringBookPage />} />
+          <Route path="/coloring/:id" element={<ColoringPlayPage />} />
+          <Route path="/coloring/:id/complete" element={<CompletionPage />} />
         </Routes>
       </Suspense>
     </BrowserRouter>
