@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const useHomePage = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"museum" | "gallery">("museum");
   const [isThemeSheetOpen, setIsThemeSheetOpen] = useState(false);
   const [selectedThemeId, setSelectedThemeId] = useState("white");
@@ -22,7 +24,7 @@ const useHomePage = () => {
   };
 
   const handleCreateArtwork = () => {
-    // 추후 작품 만들기 페이지 이동 로직 추가
+    navigate("/coloring");
   };
 
   return {

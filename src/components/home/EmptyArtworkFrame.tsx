@@ -1,8 +1,12 @@
 import frameImage from "@images/home/frame.png";
 
-function EmptyArtworkFrame() {
+interface EmptyArtworkFrameProps {
+  onClick: () => void;
+}
+
+function EmptyArtworkFrame({ onClick }: EmptyArtworkFrameProps) {
   return (
-    <div className="flex flex-1 items-center justify-center relative">
+    <div className="flex flex-1 items-center justify-center relative" onClick={onClick}>
       {/* 그림자 */}
       <div className="absolute w-[320px] h-[369px] blur-[17px] mix-blend-multiply opacity-10 bg-black rounded-sm" />
 
