@@ -1,8 +1,21 @@
-function ColoringLoadingSkeleton() {
+interface ColoringLoadingSkeletonProps {
+  imageUrl?: string;
+  title?: string;
+}
+
+function ColoringLoadingSkeleton({ imageUrl, title }: ColoringLoadingSkeletonProps) {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-[#F3F5F7] pb-[60px]">
       {/* 스켈레톤 이미지 */}
-      <div className="size-[250px] rounded-[18px] border border-[#F9FAFB] shadow-[0px_0px_15px_0px_rgba(0,0,0,0.08)] skeleton-shimmer" />
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt={title ?? "도안"}
+          className="size-[250px] rounded-[18px] border border-[#F9FAFB] object-cover shadow-[0px_0px_15px_0px_rgba(0,0,0,0.08)] skeleton-reveal"
+        />
+      ) : (
+        <div className="size-[250px] rounded-[18px] border border-[#F9FAFB] shadow-[0px_0px_15px_0px_rgba(0,0,0,0.08)] skeleton-shimmer" />
+      )}
 
       {/* 텍스트 + 로딩 dots */}
       <div className="mt-5 flex flex-col items-center gap-5">

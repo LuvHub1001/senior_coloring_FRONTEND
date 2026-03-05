@@ -34,7 +34,10 @@ const useColoringBookPage = () => {
   };
 
   const handleColoringItemClick = (id: string) => {
-    navigate(`/coloring/${id}`);
+    const design = filteredItems.find((item) => item.id === id);
+    navigate(`/coloring/${id}`, {
+      state: { imageUrl: design?.imageUrl, title: design?.title },
+    });
   };
 
   return {

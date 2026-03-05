@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useDesignDetail } from "@/hooks/useDesigns";
+import { useColoringCanvas } from "@/hooks/useColoringCanvas";
 
 // HSL → HEX 변환
 const hslToHex = (h: number, s: number, l: number): string => {
@@ -49,76 +51,68 @@ const DEFAULT_COLORS = [
   "#EC4899",
 ];
 
-// 임시 도안 데이터 (추후 API 연동 시 교체)
-const MOCK_DESIGNS: Record<string, { title: string; imageUrl: string }> = {
-  "1": { title: "연꽃", imageUrl: "" },
-  "2": { title: "고양이", imageUrl: "" },
-  "3": { title: "앵무새", imageUrl: "" },
-  "4": { title: "난초", imageUrl: "" },
-  "5": { title: "호랑이", imageUrl: "" },
-  "6": { title: "장미", imageUrl: "" },
-};
-
 const MIN_LOADING_MS = 2500;
+
+interface LocationState {
+  imageUrl?: string;
+  title?: string;
+}
 
 const useColoringPlayPage = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const locationState = (location.state ?? {}) as LocationState;
 
-  const [isLoading, setIsLoading] = useState(true);
+  const { design: apiDesign, isLoading: isApiLoading } = useDesignDetail(id ?? "");
+
+  const [minLoadingDone, setMinLoadingDone] = useState(false);
   const [selectedColor, setSelectedColor] = useState(DEFAULT_COLORS[0]);
-  const [colorHistory, setColorHistory] = useState<string[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [isToolBarCollapsed, setIsToolBarCollapsed] = useState(false);
   const [huePercent, setHuePercent] = useState(0);
   const [brightnessPercent, setBrightnessPercent] = useState(50);
 
-  const design = MOCK_DESIGNS[id ?? ""] ?? { title: "도안", imageUrl: "" };
+  const title = apiDesign?.title ?? locationState.title ?? "도안";
+  const imageUrl = apiDesign?.imageUrl ?? locationState.imageUrl ?? "";
+  const isLoading = !minLoadingDone || isApiLoading;
+
+  // 캔버스 색칠 로직
+  const {
+    canvasRef,
+    canUndo,
+    canRedo,
+    hasColoredAnything,
+    handleCanvasTap,
+    handleUndo,
+    handleRedo,
+    getCanvasDataUrl,
+  } = useColoringCanvas(imageUrl, selectedColor);
+
+  const isCompleteEnabled = hasColoredAnything;
 
   // 최소 2.5초 로딩 보장
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsLoading(false);
+      setMinLoadingDone(true);
     }, MIN_LOADING_MS);
 
     return () => clearTimeout(timer);
   }, []);
-
-  const canUndo = historyIndex > 0;
-  const canRedo = historyIndex < colorHistory.length - 1;
-  const isCompleteEnabled = colorHistory.length > 0;
 
   const handleBack = () => {
     navigate(-1);
   };
 
   const handleComplete = () => {
-    navigate(`/coloring/${id}/complete`);
+    const completedImageUrl = getCanvasDataUrl();
+    navigate(`/coloring/${id}/complete`, {
+      state: { completedImageUrl, title },
+    });
   };
 
   const handleSelectColor = (color: string) => {
     setSelectedColor(color);
-  };
-
-  // 색칠 행위를 히스토리에 기록 (추후 캔버스 연동 시 사용)
-  const handleColorApply = useCallback(() => {
-    const newHistory = colorHistory.slice(0, historyIndex + 1);
-    newHistory.push(selectedColor);
-    setColorHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  }, [colorHistory, historyIndex, selectedColor]);
-
-  const handleUndo = () => {
-    if (canUndo) {
-      setHistoryIndex((prev) => prev - 1);
-    }
-  };
-
-  const handleRedo = () => {
-    if (canRedo) {
-      setHistoryIndex((prev) => prev + 1);
-    }
   };
 
   const handlePalette = () => {
@@ -169,8 +163,9 @@ const useColoringPlayPage = () => {
 
   return {
     isLoading,
-    title: design.title,
-    imageUrl: design.imageUrl,
+    title,
+    imageUrl,
+    canvasRef,
     colors: DEFAULT_COLORS,
     selectedColor,
     canUndo,
@@ -179,7 +174,7 @@ const useColoringPlayPage = () => {
     handleBack,
     handleComplete,
     handleSelectColor,
-    handleColorApply,
+    handleCanvasTap,
     handleUndo,
     handleRedo,
     handlePalette,
