@@ -5,6 +5,7 @@ import { useColoringBookPage } from "@/hooks/useColoringBookPage";
 import { useColoringPlayPage } from "@/hooks/useColoringPlayPage";
 import { useLoginPage } from "@/hooks/useLoginPage";
 import { useAuthCallbackPage } from "@/hooks/useAuthCallbackPage";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 export {
   useImageCarousel,
@@ -13,4 +14,5 @@ export {
   useColoringPlayPage,
   useLoginPage,
   useAuthCallbackPage,
+  useUserProfile,
 };
