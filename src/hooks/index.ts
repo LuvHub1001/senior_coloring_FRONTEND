@@ -7,6 +7,7 @@ import { useLoginPage } from "@/hooks/useLoginPage";
 import { useAuthCallbackPage } from "@/hooks/useAuthCallbackPage";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useDesignList, useDesignDetail, useCreateDesign } from "@/hooks/useDesigns";
+import { useColoringCanvas } from "@/hooks/useColoringCanvas";
 
 export {
   useImageCarousel,
@@ -19,4 +20,5 @@ export {
   useDesignList,
   useDesignDetail,
   useCreateDesign,
+  useColoringCanvas,
 };

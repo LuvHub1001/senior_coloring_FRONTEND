@@ -13,6 +13,7 @@ function ColoringPlayPage() {
     isLoading,
     title,
     imageUrl,
+    canvasRef,
     colors,
     selectedColor,
     canUndo,
@@ -21,6 +22,7 @@ function ColoringPlayPage() {
     handleBack,
     handleComplete,
     handleSelectColor,
+    handleCanvasTap,
     handleUndo,
     handleRedo,
     handlePalette,
@@ -38,12 +40,15 @@ function ColoringPlayPage() {
     handlePaletteClose,
   } = useColoringPlayPage();
 
-  if (isLoading) {
-    return <ColoringLoadingSkeleton />;
-  }
-
   return (
-    <div className="flex min-h-dvh flex-col bg-[#F9FAFB]">
+    <div className="relative flex min-h-dvh flex-col bg-[#F9FAFB]">
+      {/* 로딩 스켈레톤 오버레이 — 캔버스가 항상 DOM에 존재하도록 */}
+      {isLoading && (
+        <div className="absolute inset-0 z-10">
+          <ColoringLoadingSkeleton imageUrl={imageUrl} title={title} />
+        </div>
+      )}
+
       {/* 헤더 */}
       <ColoringPlayHeader
         title={title}
@@ -54,8 +59,8 @@ function ColoringPlayPage() {
 
       {/* 캔버스 영역 */}
       <ColoringCanvas
-        imageUrl={imageUrl}
-        title={title}
+        canvasRef={canvasRef}
+        onCanvasTap={handleCanvasTap}
       />
 
       {/* 팔레트 바텀시트 */}
