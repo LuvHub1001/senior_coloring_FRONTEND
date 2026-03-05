@@ -41,6 +41,7 @@ const THEMES = [
 
 function HomePage() {
   const {
+    userName,
     activeTab,
     isThemeSheetOpen,
     selectedThemeId,
@@ -62,7 +63,7 @@ function HomePage() {
 
       {/* 타이틀 */}
       <HomeTitle
-        userName="민수"
+        userName={userName}
         subtitle="그림을 그려서 내 미술관에 전시해요"
       />
 
