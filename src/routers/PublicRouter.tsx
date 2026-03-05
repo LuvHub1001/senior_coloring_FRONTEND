@@ -32,6 +32,12 @@ const CompletionPage = lazy(() =>
   }))
 );
 
+const AuthCallbackPage = lazy(() =>
+  import("@/pages/auth/AuthCallbackPage.tsx").then((module) => ({
+    default: module.AuthCallbackPage,
+  }))
+);
+
 function PublicRouter() {
   return (
     <BrowserRouter>
@@ -43,6 +49,7 @@ function PublicRouter() {
           <Route path="/coloring" element={<ColoringBookPage />} />
           <Route path="/coloring/:id" element={<ColoringPlayPage />} />
           <Route path="/coloring/:id/complete" element={<CompletionPage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
         </Routes>
       </Suspense>
     </BrowserRouter>
