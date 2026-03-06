@@ -3,6 +3,8 @@ export interface Theme {
   name: string;
   requiredArtworks: number;
   imageUrl: string;
+  buttonColor: string;
+  buttonTextColor: string;
   unlocked: boolean;
   selected: boolean;
 }

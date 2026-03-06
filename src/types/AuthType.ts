@@ -7,6 +7,8 @@ export interface SelectedTheme {
   id: number;
   name: string;
   imageUrl: string;
+  buttonColor: string;
+  buttonTextColor: string;
 }
 
 export interface UserProfile {
@@ -16,6 +18,7 @@ export interface UserProfile {
   email: string;
   selectedThemeId: number;
   selectedTheme: SelectedTheme;
+  featuredArtworkId: string | null;
   createdAt: string;
 }
 
