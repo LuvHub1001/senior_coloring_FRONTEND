@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { getThemes, selectTheme } from "@/apis/ThemeFetcher";
+import { getArtworks, featureArtwork } from "@/apis/ArtworkFetcher";
 
 interface HomeLocationState {
   isNewUser?: boolean;
@@ -19,6 +20,14 @@ const useHomePage = () => {
   );
   const [activeTab, setActiveTab] = useState<"museum" | "gallery">("museum");
   const [isThemeSheetOpen, setIsThemeSheetOpen] = useState(false);
+
+  // 완성된 작품 목록 조회
+  const { data: completedData } = useQuery({
+    queryKey: ["artworks", "COMPLETED"],
+    queryFn: () => getArtworks("COMPLETED"),
+  });
+
+  const completedArtworks = completedData?.data ?? [];
 
   // 테마 목록 조회
   const { data: themesData } = useQuery({
@@ -75,6 +84,27 @@ const useHomePage = () => {
     window.history.replaceState({}, "");
   };
 
+  // 대표 작품 선택 mutation
+  const featureMutation = useMutation({
+    mutationFn: (artworkId: string) => featureArtwork(artworkId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+    },
+  });
+
+  const handleFeatureArtwork = (artworkId: string) => {
+    featureMutation.mutate(artworkId);
+  };
+
+  // 대표 작품 (featuredArtworkId 기준, 없으면 최신 작품)
+  const featuredArtworkId = userProfile?.featuredArtworkId;
+  const featuredArtwork = completedArtworks.find((a) => a.id === featuredArtworkId)
+    ?? (completedArtworks.length > 0
+      ? completedArtworks.reduce((latest, artwork) =>
+          new Date(artwork.updatedAt) > new Date(latest.updatedAt) ? artwork : latest
+        )
+      : null);
+
   return {
     userName: userProfile?.nickname ?? "",
     isProfileLoading,
@@ -82,13 +112,20 @@ const useHomePage = () => {
     activeTab,
     isThemeSheetOpen,
     selectedThemeId,
+    selectedThemeImageUrl: userProfile?.selectedTheme?.imageUrl ?? "",
+    buttonColor: userProfile?.selectedTheme?.buttonColor ?? "#333D48",
+    buttonTextColor: userProfile?.selectedTheme?.buttonTextColor ?? "#FFFFFF",
+    textColor: userProfile?.selectedTheme?.textColor ?? "#000000",
     themes,
+    completedArtworks,
+    featuredArtwork,
     handleTabChange,
     handleThemeClick,
     handleThemeClose,
     handleSelectTheme,
     handleCreateArtwork,
     handleWelcomeDismiss,
+    handleFeatureArtwork,
   };
 };
 

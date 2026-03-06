@@ -48,6 +48,14 @@ export const completeArtwork = async (id: string): Promise<ArtworkCompleteRespon
   return data;
 };
 
+// 대표 작품 선택
+export const featureArtwork = async (id: string): Promise<{ success: boolean; data: { featuredArtworkId: string } }> => {
+  const { data } = await instance.patch<{ success: boolean; data: { featuredArtworkId: string } }>(
+    `/api/artworks/${encodeURIComponent(id)}/feature`
+  );
+  return data;
+};
+
 // 작품 삭제
 export const deleteArtwork = async (id: string): Promise<ArtworkDeleteResponse> => {
   const { data } = await instance.delete<ArtworkDeleteResponse>(

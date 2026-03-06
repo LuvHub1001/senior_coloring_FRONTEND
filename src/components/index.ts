@@ -8,6 +8,7 @@ import {
   ThemeBottomSheet,
   ThemeItem,
   WelcomeOverlay,
+  MuseumView,
 } from "@/components/home";
 import {
   ColoringHeader,
@@ -43,6 +44,7 @@ export {
   ThemeBottomSheet,
   ThemeItem,
   WelcomeOverlay,
+  MuseumView,
   ColoringHeader,
   ProgressCard,
   ProgressSection,
