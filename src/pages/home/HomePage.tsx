@@ -4,6 +4,7 @@ import {
   EmptyArtworkFrame,
   CreateArtworkButton,
   ThemeBottomSheet,
+  WelcomeOverlay,
 } from "@/components";
 import { useHomePage } from "@/hooks";
 
@@ -42,6 +43,7 @@ const THEMES = [
 function HomePage() {
   const {
     userName,
+    showWelcome,
     activeTab,
     isThemeSheetOpen,
     selectedThemeId,
@@ -50,7 +52,17 @@ function HomePage() {
     handleThemeClose,
     handleSelectTheme,
     handleCreateArtwork,
+    handleWelcomeDismiss,
   } = useHomePage();
+
+  if (showWelcome) {
+    return (
+      <WelcomeOverlay
+        userName={userName}
+        onDismiss={handleWelcomeDismiss}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-dvh bg-[#F9FAFB] relative">

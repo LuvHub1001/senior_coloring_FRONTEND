@@ -7,6 +7,7 @@ import {
   CreateArtworkButton,
   ThemeBottomSheet,
   ThemeItem,
+  WelcomeOverlay,
 } from "@/components/home";
 import {
   ColoringHeader,
@@ -39,6 +40,7 @@ export {
   CreateArtworkButton,
   ThemeBottomSheet,
   ThemeItem,
+  WelcomeOverlay,
   ColoringHeader,
   ProgressCard,
   ProgressSection,

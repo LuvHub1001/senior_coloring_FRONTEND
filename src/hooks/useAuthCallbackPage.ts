@@ -7,10 +7,11 @@ const useAuthCallbackPage = () => {
 
   useEffect(() => {
     const token = searchParams.get("token");
+    const isNewUser = searchParams.get("isNew") === "true";
 
     if (token) {
       localStorage.setItem("token", token);
-      navigate("/home", { replace: true });
+      navigate("/home", { replace: true, state: { isNewUser } });
     } else {
       navigate("/", { replace: true });
     }
