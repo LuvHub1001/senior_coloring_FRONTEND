@@ -8,13 +8,14 @@ const hexToRgba = (hex: string): { r: number; g: number; b: number; a: number } 
   return { r, g, b, a: 255 };
 };
 
-// 플러드 필 (색 채우기) 알고리즘 — 스택 기반
+// 스캔라인 플러드 필 — 어두운 선 경계 감지 + 색상 매칭
 const floodFill = (
   imageData: ImageData,
   startX: number,
   startY: number,
   fillColor: { r: number; g: number; b: number; a: number },
   tolerance: number,
+  lineBoundary: number,
 ): boolean => {
   const { data, width, height } = imageData;
   const startIdx = (startY * width + startX) * 4;
@@ -22,6 +23,11 @@ const floodFill = (
   const startG = data[startIdx + 1];
   const startB = data[startIdx + 2];
   const startA = data[startIdx + 3];
+
+  // 시작 픽셀이 선(어두운 픽셀)이면 채우지 않음
+  if (startR < lineBoundary && startG < lineBoundary && startB < lineBoundary) {
+    return false;
+  }
 
   // 이미 같은 색이면 스킵
   if (
@@ -33,10 +39,16 @@ const floodFill = (
     return false;
   }
 
-  const pixelCount = width * height;
-  const visited = new Uint8Array(pixelCount);
+  const visited = new Uint8Array(width * height);
 
-  const matchesStart = (idx: number): boolean => {
+  const canFill = (pixelIdx: number): boolean => {
+    if (visited[pixelIdx]) return false;
+    const idx = pixelIdx * 4;
+    // 어두운 픽셀(선)이면 경계로 취급
+    if (data[idx] < lineBoundary && data[idx + 1] < lineBoundary && data[idx + 2] < lineBoundary) {
+      return false;
+    }
+    // 시작 픽셀과 색상 유사성 확인
     return (
       Math.abs(data[idx] - startR) <= tolerance &&
       Math.abs(data[idx + 1] - startG) <= tolerance &&
@@ -45,36 +57,68 @@ const floodFill = (
     );
   };
 
+  const fillPixel = (pixelIdx: number) => {
+    visited[pixelIdx] = 1;
+    const idx = pixelIdx * 4;
+    data[idx] = fillColor.r;
+    data[idx + 1] = fillColor.g;
+    data[idx + 2] = fillColor.b;
+    data[idx + 3] = fillColor.a;
+  };
+
+  // 스캔라인 기반: 행 단위로 처리하여 스택 사용량 감소 및 캐시 효율 향상
   const stack: number[] = [startX, startY];
 
   while (stack.length > 0) {
     const y = stack.pop()!;
-    const x = stack.pop()!;
+    let x = stack.pop()!;
 
-    if (x < 0 || x >= width || y < 0 || y >= height) continue;
+    // 왼쪽 끝으로 이동
+    while (x > 0 && canFill(y * width + x - 1)) x--;
 
-    const pixelIdx = y * width + x;
-    if (visited[pixelIdx]) continue;
+    let spanAbove = false;
+    let spanBelow = false;
 
-    const dataIdx = pixelIdx * 4;
-    if (!matchesStart(dataIdx)) continue;
+    // 왼쪽에서 오른쪽으로 스캔하며 채우기
+    while (x < width) {
+      const pi = y * width + x;
+      if (!canFill(pi)) break;
 
-    visited[pixelIdx] = 1;
-    data[dataIdx] = fillColor.r;
-    data[dataIdx + 1] = fillColor.g;
-    data[dataIdx + 2] = fillColor.b;
-    data[dataIdx + 3] = fillColor.a;
+      fillPixel(pi);
 
-    stack.push(x + 1, y);
-    stack.push(x - 1, y);
-    stack.push(x, y + 1);
-    stack.push(x, y - 1);
+      // 위쪽 행 체크
+      if (y > 0) {
+        if (canFill((y - 1) * width + x)) {
+          if (!spanAbove) {
+            stack.push(x, y - 1);
+            spanAbove = true;
+          }
+        } else {
+          spanAbove = false;
+        }
+      }
+
+      // 아래쪽 행 체크
+      if (y < height - 1) {
+        if (canFill((y + 1) * width + x)) {
+          if (!spanBelow) {
+            stack.push(x, y + 1);
+            spanBelow = true;
+          }
+        } else {
+          spanBelow = false;
+        }
+      }
+
+      x++;
+    }
   }
 
   return true;
 };
 
-const FLOOD_FILL_TOLERANCE = 32;
+const FLOOD_FILL_TOLERANCE = 15;
+const LINE_BOUNDARY_THRESHOLD = 80;
 const MAX_HISTORY = 50;
 
 const useColoringCanvas = (imageUrl: string, selectedColor: string) => {
@@ -150,7 +194,7 @@ const useColoringCanvas = (imageUrl: string, selectedColor: string) => {
 
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const fillColor = hexToRgba(selectedColor);
-      const filled = floodFill(imageData, x, y, fillColor, FLOOD_FILL_TOLERANCE);
+      const filled = floodFill(imageData, x, y, fillColor, FLOOD_FILL_TOLERANCE, LINE_BOUNDARY_THRESHOLD);
 
       if (filled) {
         ctx.putImageData(imageData, 0, 0);
