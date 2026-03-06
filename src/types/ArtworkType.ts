@@ -14,9 +14,22 @@ export interface Artwork {
   design: Pick<Design, "id" | "title" | "imageUrl">;
 }
 
+export interface UnlockedTheme {
+  id: number;
+  name: string;
+  imageUrl: string;
+}
+
 export interface ArtworkResponse {
   success: boolean;
   data: Artwork;
+}
+
+export interface ArtworkCompleteResponse {
+  success: boolean;
+  data: Artwork & {
+    unlockedTheme: UnlockedTheme | null;
+  };
 }
 
 export interface ArtworkListResponse {

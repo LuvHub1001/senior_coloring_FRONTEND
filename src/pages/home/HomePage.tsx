@@ -8,38 +8,6 @@ import {
 } from "@/components";
 import { useHomePage } from "@/hooks";
 
-/* 테마 데이터 (추후 API 연동 시 hooks로 이동) */
-const THEMES = [
-  {
-    id: "white",
-    name: "화이트 홀",
-    description: "사용 가능",
-    gradient: "linear-gradient(135deg, #FFFFFF 0%, #E5E5E5 100%)",
-    isLocked: false,
-  },
-  {
-    id: "opera",
-    name: "오페라 홀",
-    description: "작품 1개 완성하기",
-    gradient: "linear-gradient(135deg, #590A0B 0%, #8B1A1D 100%)",
-    isLocked: true,
-  },
-  {
-    id: "emerald",
-    name: "에메랄드크 홀",
-    description: "작품 10개 완성하기",
-    gradient: "linear-gradient(135deg, #064E3B 0%, #10B981 100%)",
-    isLocked: true,
-  },
-  {
-    id: "gold",
-    name: "골드 홀",
-    description: "작품 20개 완성하기",
-    gradient: "linear-gradient(135deg, #78350F 0%, #F59E0B 100%)",
-    isLocked: true,
-  },
-];
-
 function HomePage() {
   const {
     userName,
@@ -47,6 +15,7 @@ function HomePage() {
     activeTab,
     isThemeSheetOpen,
     selectedThemeId,
+    themes,
     handleTabChange,
     handleThemeClick,
     handleThemeClose,
@@ -89,7 +58,7 @@ function HomePage() {
       <ThemeBottomSheet
         isOpen={isThemeSheetOpen}
         selectedThemeId={selectedThemeId}
-        themes={THEMES}
+        themes={themes}
         onClose={handleThemeClose}
         onSelectTheme={handleSelectTheme}
       />
