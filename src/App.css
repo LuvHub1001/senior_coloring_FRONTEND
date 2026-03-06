@@ -81,6 +81,36 @@
   }
 }
 
+/* 환영 오버레이 페이드인 */
+@utility welcome-fade-in {
+  animation: welcomeFadeIn 0.6s ease-out forwards;
+}
+
+@keyframes welcomeFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* 환영 텍스트 슬라이드업 */
+@utility welcome-text-up {
+  animation: welcomeTextUp 0.8s 0.3s ease-out both;
+}
+
+@keyframes welcomeTextUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* 로딩 점 애니메이션 */
 @utility dot-pulse {
   animation: pulse 1.4s infinite ease-in-out both;
