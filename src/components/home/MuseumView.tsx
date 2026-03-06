@@ -15,6 +15,7 @@ interface MuseumViewProps {
   artworks: ArtworkThumbnail[];
   buttonColor: string;
   buttonTextColor: string;
+  textColor: string;
   onCreateArtwork: () => void;
   onFeatureArtwork: (artworkId: string) => void;
 }
@@ -28,6 +29,7 @@ function MuseumView({
   artworks,
   buttonColor,
   buttonTextColor,
+  textColor,
   onCreateArtwork,
   onFeatureArtwork,
 }: MuseumViewProps) {
@@ -38,16 +40,25 @@ function MuseumView({
       className="flex min-h-dvh flex-col bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: `url(${themeImageUrl})` }}
     >
-      {/* 타이틀 섹션 */}
-      <div className="flex flex-col items-center gap-2 px-6 pb-4 pt-6">
-        <h1 className="text-center text-[26px] font-bold text-white tracking-[-0.13px] leading-[35px]">
+      {/* 타이틀 섹션 (NavBar 높이만큼 상단 여백) */}
+      <div className="flex flex-col items-center gap-2 px-6 pb-4 pt-25">
+        <h1
+          className="text-center text-[26px] font-bold tracking-[-0.13px] leading-[35px]"
+          style={{ color: textColor }}
+        >
           {userName}님의 미술관
         </h1>
         <div className="flex items-center gap-1">
-          <span className="text-[15px] font-medium text-white tracking-[-0.075px] leading-[22.5px]">
+          <span
+            className="text-[15px] font-medium tracking-[-0.075px] leading-[22.5px]"
+            style={{ color: textColor }}
+          >
             작품수
           </span>
-          <span className="text-[15px] font-bold text-white tracking-[-0.075px] leading-[22.5px]">
+          <span
+            className="text-[15px] font-bold tracking-[-0.075px] leading-[22.5px]"
+            style={{ color: textColor }}
+          >
             {artworkCount}
           </span>
         </div>

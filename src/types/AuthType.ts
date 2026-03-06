@@ -9,6 +9,7 @@ export interface SelectedTheme {
   imageUrl: string;
   buttonColor: string;
   buttonTextColor: string;
+  textColor: string;
 }
 
 export interface UserProfile {

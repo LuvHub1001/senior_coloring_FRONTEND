@@ -19,6 +19,7 @@ function HomePage() {
     selectedThemeImageUrl,
     buttonColor,
     buttonTextColor,
+    textColor,
     themes,
     completedArtworks,
     featuredArtwork,
@@ -56,6 +57,7 @@ function HomePage() {
             artworks={completedArtworks}
             buttonColor={buttonColor}
             buttonTextColor={buttonTextColor}
+            textColor={textColor}
             onCreateArtwork={handleCreateArtwork}
             onFeatureArtwork={handleFeatureArtwork}
           />

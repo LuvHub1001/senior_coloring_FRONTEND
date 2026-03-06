@@ -5,6 +5,7 @@ export interface Theme {
   imageUrl: string;
   buttonColor: string;
   buttonTextColor: string;
+  textColor: string;
   unlocked: boolean;
   selected: boolean;
 }
