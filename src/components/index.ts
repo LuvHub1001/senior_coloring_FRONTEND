@@ -16,6 +16,7 @@ import {
   CategoryFilter,
   ColoringItem,
   ColoringItemGrid,
+  ArtworkPreviewModal,
 } from "@/components/coloring";
 import {
   ColoringLoadingSkeleton,
@@ -24,6 +25,7 @@ import {
   ColorPaletteBar,
   ColoringToolBar,
   PaletteBottomSheet,
+  SaveConfirmModal,
 } from "@/components/coloringPlay";
 import {
   Confetti,
@@ -47,12 +49,14 @@ export {
   CategoryFilter,
   ColoringItem,
   ColoringItemGrid,
+  ArtworkPreviewModal,
   ColoringLoadingSkeleton,
   ColoringPlayHeader,
   ColoringCanvas,
   ColorPaletteBar,
   ColoringToolBar,
   PaletteBottomSheet,
+  SaveConfirmModal,
   Confetti,
   CompletionScreen,
   AchievementModal,

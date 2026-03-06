@@ -5,6 +5,7 @@ import {
   ColorPaletteBar,
   ColoringToolBar,
   PaletteBottomSheet,
+  SaveConfirmModal,
 } from "@/components";
 import { useColoringPlayPage } from "@/hooks";
 
@@ -20,6 +21,9 @@ function ColoringPlayPage() {
     canRedo,
     isCompleteEnabled,
     handleBack,
+    handleBackConfirm,
+    handleBackCancel,
+    isBackModalOpen,
     handleComplete,
     handleSelectColor,
     handleCanvasTap,
@@ -111,6 +115,13 @@ function ColoringPlayPage() {
           onCollapse={handleCollapse}
         />
       </div>
+      {/* 뒤로가기 확인 모달 */}
+      {isBackModalOpen && (
+        <SaveConfirmModal
+          onConfirm={handleBackConfirm}
+          onCancel={handleBackCancel}
+        />
+      )}
     </div>
   );
 }
