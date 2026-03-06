@@ -1,7 +1,7 @@
 interface ThemeItemProps {
   name: string;
   description: string;
-  gradient: string;
+  imageUrl: string;
   isSelected?: boolean;
   isLocked?: boolean;
   onSelect?: () => void;
@@ -10,7 +10,7 @@ interface ThemeItemProps {
 function ThemeItem({
   name,
   description,
-  gradient,
+  imageUrl,
   isSelected = false,
   isLocked = false,
   onSelect,
@@ -19,10 +19,11 @@ function ThemeItem({
     return (
       <div className="flex w-full items-center rounded-2xl bg-[rgba(2,32,71,0.05)] px-5">
         <div className="flex flex-1 items-center gap-4 py-4">
-          {/* 테마 색상 미리보기 */}
-          <div
-            className="size-16 shrink-0 rounded-[10px] opacity-40"
-            style={{ backgroundImage: gradient }}
+          {/* 테마 이미지 미리보기 */}
+          <img
+            src={imageUrl}
+            alt={name}
+            className="size-16 shrink-0 rounded-[10px] opacity-40 object-cover"
           />
 
           {/* 테마 정보 */}
@@ -50,10 +51,11 @@ function ThemeItem({
       }`}
     >
       <div className="flex flex-1 items-center gap-4 py-4">
-        {/* 테마 색상 미리보기 */}
-        <div
-          className="size-[72px] shrink-0 rounded-[9px]"
-          style={{ backgroundImage: gradient }}
+        {/* 테마 이미지 미리보기 */}
+        <img
+          src={imageUrl}
+          alt={name}
+          className="size-[72px] shrink-0 rounded-[9px] object-cover"
         />
 
         {/* 테마 정보 */}

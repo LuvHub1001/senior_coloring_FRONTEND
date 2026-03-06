@@ -10,7 +10,15 @@ export type {
 export type {
   ArtworkStatus,
   Artwork,
+  UnlockedTheme,
   ArtworkResponse,
+  ArtworkCompleteResponse,
   ArtworkListResponse,
   ArtworkDeleteResponse,
 } from "./ArtworkType";
+export type {
+  Theme,
+  ThemeListResponse,
+  ThemeSelectRequest,
+  ThemeSelectResponse,
+} from "./ThemeType";

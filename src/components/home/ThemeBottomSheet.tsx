@@ -1,19 +1,19 @@
 import { ThemeItem } from "@/components/home/ThemeItem";
 
 interface Theme {
-  id: string;
+  id: number;
   name: string;
   description: string;
-  gradient: string;
+  imageUrl: string;
   isLocked: boolean;
 }
 
 interface ThemeBottomSheetProps {
   isOpen: boolean;
-  selectedThemeId: string;
+  selectedThemeId: number;
   themes: Theme[];
   onClose: () => void;
-  onSelectTheme: (themeId: string) => void;
+  onSelectTheme: (themeId: number) => void;
 }
 
 function ThemeBottomSheet({
@@ -78,7 +78,7 @@ function ThemeBottomSheet({
               key={theme.id}
               name={theme.name}
               description={theme.description}
-              gradient={theme.gradient}
+              imageUrl={theme.imageUrl}
               isSelected={selectedThemeId === theme.id}
               onSelect={() => onSelectTheme(theme.id)}
             />
@@ -128,7 +128,7 @@ function ThemeBottomSheet({
                   key={theme.id}
                   name={theme.name}
                   description={theme.description}
-                  gradient={theme.gradient}
+                  imageUrl={theme.imageUrl}
                   isLocked
                 />
               ))}

@@ -2,6 +2,7 @@ import instance from "@/apis";
 import type {
   ArtworkStatus,
   ArtworkResponse,
+  ArtworkCompleteResponse,
   ArtworkListResponse,
   ArtworkDeleteResponse,
 } from "@/types";
@@ -40,8 +41,8 @@ export const getArtworkById = async (id: string): Promise<ArtworkResponse> => {
 };
 
 // 작품 완성
-export const completeArtwork = async (id: string): Promise<ArtworkResponse> => {
-  const { data } = await instance.patch<ArtworkResponse>(
+export const completeArtwork = async (id: string): Promise<ArtworkCompleteResponse> => {
+  const { data } = await instance.patch<ArtworkCompleteResponse>(
     `/api/artworks/${encodeURIComponent(id)}/complete`
   );
   return data;
