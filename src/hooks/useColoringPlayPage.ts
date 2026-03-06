@@ -147,10 +147,14 @@ const useColoringPlayPage = () => {
     setIsBackModalOpen(false);
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    // 완성 전 최종 저장
+    if (artworkId) {
+      await handleSaveArtwork(getCanvasFile, getProgress);
+    }
     const completedImageUrl = getCanvasDataUrl();
     navigate(`/coloring/${id}/complete`, {
-      state: { completedImageUrl, title },
+      state: { completedImageUrl, title, artworkId },
     });
   };
 

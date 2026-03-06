@@ -24,19 +24,21 @@ const useColoringBookPage = () => {
     queryFn: () => getArtworks("IN_PROGRESS"),
   });
 
-  // 같은 도안은 가장 최근 작품만 표시
-  const inProgressArtworks = (artworksData?.data ?? []).reduce<Artwork[]>(
-    (acc, artwork) => {
-      const existing = acc.find((a) => a.designId === artwork.designId);
-      if (!existing) {
-        acc.push(artwork);
-      } else if (new Date(artwork.updatedAt) > new Date(existing.updatedAt)) {
-        acc[acc.indexOf(existing)] = artwork;
-      }
-      return acc;
-    },
-    [],
-  );
+  // 같은 도안은 가장 최근 작품만 표시 (진행률 0%는 제외)
+  const inProgressArtworks = (artworksData?.data ?? [])
+    .filter((artwork) => artwork.progress > 0)
+    .reduce<Artwork[]>(
+      (acc, artwork) => {
+        const existing = acc.find((a) => a.designId === artwork.designId);
+        if (!existing) {
+          acc.push(artwork);
+        } else if (new Date(artwork.updatedAt) > new Date(existing.updatedAt)) {
+          acc[acc.indexOf(existing)] = artwork;
+        }
+        return acc;
+      },
+      [],
+    );
 
   // 작품 삭제 mutation
   const deleteMutation = useMutation({
