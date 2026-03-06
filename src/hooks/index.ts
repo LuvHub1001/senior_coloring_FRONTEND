@@ -9,6 +9,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useDesignList, useDesignDetail, useCreateDesign } from "@/hooks/useDesigns";
 import { useColoringCanvas } from "@/hooks/useColoringCanvas";
 import { useArtworkSave } from "@/hooks/useArtworkSave";
+import { useCompletionPage } from "@/hooks/useCompletionPage";
 
 export {
   useImageCarousel,
@@ -23,4 +24,5 @@ export {
   useCreateDesign,
   useColoringCanvas,
   useArtworkSave,
+  useCompletionPage,
 };

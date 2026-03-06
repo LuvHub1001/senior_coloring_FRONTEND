@@ -6,7 +6,7 @@ interface EmptyArtworkFrameProps {
 
 function EmptyArtworkFrame({ onClick }: EmptyArtworkFrameProps) {
   return (
-    <div className="flex flex-1 items-center justify-center relative" onClick={onClick}>
+    <div className="flex flex-1 items-center justify-center relative">
       {/* 그림자 */}
       <div className="absolute w-[320px] h-[369px] blur-[17px] mix-blend-multiply opacity-10 bg-black rounded-sm" />
 
@@ -21,9 +21,10 @@ function EmptyArtworkFrame({ onClick }: EmptyArtworkFrameProps) {
           />
         </div>
 
-        {/* 액자 내부 콘텐츠 */}
+        {/* 액자 내부 콘텐츠 (클릭 영역) */}
         <div
-          className="absolute left-1/2 -translate-x-1/2 top-[56.5px] w-[186px] h-[254px] rounded-[10px] overflow-hidden flex flex-col items-center justify-center gap-4 pb-[18px] px-3"
+          onClick={onClick}
+          className="absolute left-1/2 -translate-x-1/2 top-[56.5px] w-[186px] h-[254px] rounded-[10px] overflow-hidden flex flex-col items-center justify-center gap-4 pb-[18px] px-3 cursor-pointer"
           style={{
             backgroundImage:
               "linear-gradient(126.2deg, #FCCED8 0%, #BEDBFF 50%, #FEF9C2 100%)",
