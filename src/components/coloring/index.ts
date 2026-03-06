@@ -4,6 +4,7 @@ import { ProgressSection } from "@/components/coloring/ProgressSection";
 import { CategoryFilter } from "@/components/coloring/CategoryFilter";
 import { ColoringItem } from "@/components/coloring/ColoringItem";
 import { ColoringItemGrid } from "@/components/coloring/ColoringItemGrid";
+import { ArtworkPreviewModal } from "@/components/coloring/ArtworkPreviewModal";
 
 export {
   ColoringHeader,
@@ -12,4 +13,5 @@ export {
   CategoryFilter,
   ColoringItem,
   ColoringItemGrid,
+  ArtworkPreviewModal,
 };

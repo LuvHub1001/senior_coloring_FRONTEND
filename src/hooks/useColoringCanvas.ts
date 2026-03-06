@@ -203,11 +203,57 @@ const useColoringCanvas = (imageUrl: string, selectedColor: string) => {
     setHistoryVersion((v) => v + 1);
   }, []);
 
+  // 색칠 진행률 계산 (흰색/검정 제외 픽셀 비율)
+  const getProgress = useCallback((): number => {
+    const canvas = canvasRef.current;
+    if (!canvas) return 0;
+
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return 0;
+
+    const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const total = width * height;
+    let colored = 0;
+
+    for (let i = 0; i < total; i++) {
+      const idx = i * 4;
+      const r = data[idx];
+      const g = data[idx + 1];
+      const b = data[idx + 2];
+
+      // 흰색 계열(배경)과 검정 계열(윤곽선) 제외
+      const isWhite = r > 230 && g > 230 && b > 230;
+      const isBlack = r < 40 && g < 40 && b < 40;
+
+      if (!isWhite && !isBlack) {
+        colored++;
+      }
+    }
+
+    return Math.min(Math.round((colored / total) * 100), 100);
+  }, []);
+
   // 현재 캔버스를 이미지 데이터 URL로 내보내기 (완성 화면용)
   const getCanvasDataUrl = useCallback((): string => {
     const canvas = canvasRef.current;
     if (!canvas) return "";
     return canvas.toDataURL("image/png");
+  }, []);
+
+  // 현재 캔버스를 File 객체로 내보내기 (임시 저장 API용)
+  const getCanvasFile = useCallback((): Promise<File | null> => {
+    const canvas = canvasRef.current;
+    if (!canvas) return Promise.resolve(null);
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          resolve(null);
+          return;
+        }
+        resolve(new File([blob], "coloring.png", { type: "image/png" }));
+      }, "image/png");
+    });
   }, []);
 
   return {
@@ -220,6 +266,8 @@ const useColoringCanvas = (imageUrl: string, selectedColor: string) => {
     handleUndo,
     handleRedo,
     getCanvasDataUrl,
+    getCanvasFile,
+    getProgress,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _historyVersion: historyVersion,
   };

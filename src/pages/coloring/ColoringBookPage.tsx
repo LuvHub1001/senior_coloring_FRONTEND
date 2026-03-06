@@ -3,6 +3,7 @@ import {
   ProgressSection,
   CategoryFilter,
   ColoringItemGrid,
+  ArtworkPreviewModal,
 } from "@/components";
 import { useColoringBookPage } from "@/hooks";
 
@@ -12,10 +13,18 @@ function ColoringBookPage() {
     selectedCategory,
     progressItems,
     filteredItems,
+    selectedArtwork,
+    isMoreMenuOpen,
     handleBack,
     handleCategorySelect,
     handleProgressItemClick,
     handleColoringItemClick,
+    handleClosePreview,
+    handleContinueColoring,
+    handleExhibit,
+    handleToggleMoreMenu,
+    handleDeleteArtwork,
+    handleShareArtwork,
   } = useColoringBookPage();
 
   return (
@@ -51,6 +60,20 @@ function ColoringBookPage() {
           />
         </section>
       </div>
+
+      {/* 임시저장 작품 프리뷰 모달 */}
+      {selectedArtwork && (
+        <ArtworkPreviewModal
+          artwork={selectedArtwork}
+          isMoreMenuOpen={isMoreMenuOpen}
+          onClose={handleClosePreview}
+          onContinue={handleContinueColoring}
+          onExhibit={handleExhibit}
+          onToggleMoreMenu={handleToggleMoreMenu}
+          onShare={handleShareArtwork}
+          onDelete={handleDeleteArtwork}
+        />
+      )}
     </div>
   );
 }

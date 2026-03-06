@@ -8,6 +8,7 @@ import { useAuthCallbackPage } from "@/hooks/useAuthCallbackPage";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useDesignList, useDesignDetail, useCreateDesign } from "@/hooks/useDesigns";
 import { useColoringCanvas } from "@/hooks/useColoringCanvas";
+import { useArtworkSave } from "@/hooks/useArtworkSave";
 
 export {
   useImageCarousel,
@@ -21,4 +22,5 @@ export {
   useDesignDetail,
   useCreateDesign,
   useColoringCanvas,
+  useArtworkSave,
 };

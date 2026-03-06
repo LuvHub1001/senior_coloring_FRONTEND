@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useDesignDetail } from "@/hooks/useDesigns";
 import { useColoringCanvas } from "@/hooks/useColoringCanvas";
+import { useArtworkSave } from "@/hooks/useArtworkSave";
 
 // HSL → HEX 변환
 const hslToHex = (h: number, s: number, l: number): string => {
@@ -56,6 +57,8 @@ const MIN_LOADING_MS = 2500;
 interface LocationState {
   imageUrl?: string;
   title?: string;
+  artworkId?: string;
+  savedImageUrl?: string;
 }
 
 const useColoringPlayPage = () => {
@@ -74,7 +77,8 @@ const useColoringPlayPage = () => {
   const [brightnessPercent, setBrightnessPercent] = useState(50);
 
   const title = apiDesign?.title ?? locationState.title ?? "도안";
-  const imageUrl = apiDesign?.imageUrl ?? locationState.imageUrl ?? "";
+  // 저장된 이미지가 있으면 (이어 그리기) 그걸 우선 사용
+  const imageUrl = locationState.savedImageUrl ?? apiDesign?.imageUrl ?? locationState.imageUrl ?? "";
   const isLoading = !minLoadingDone || isApiLoading;
 
   // 캔버스 색칠 로직
@@ -87,9 +91,21 @@ const useColoringPlayPage = () => {
     handleUndo,
     handleRedo,
     getCanvasDataUrl,
+    getCanvasFile,
+    getProgress,
   } = useColoringCanvas(imageUrl, selectedColor);
 
-  const isCompleteEnabled = hasColoredAnything;
+  // 작품 생성 및 임시 저장 (이어 그리기 시 기존 artworkId 전달)
+  const {
+    artworkId,
+    handleCreateArtwork,
+    handleSaveArtwork,
+    isSaving,
+  } = useArtworkSave(id ?? "", locationState.artworkId);
+
+  // 이어 그리기(savedImageUrl 존재)면 이미 색칠된 상태이므로 완성 가능
+  const isResuming = !!locationState.savedImageUrl;
+  const isCompleteEnabled = isResuming || hasColoredAnything;
 
   // 최소 2.5초 로딩 보장
   useEffect(() => {
@@ -100,8 +116,35 @@ const useColoringPlayPage = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // 첫 색칠 시 작품 생성 (색칠 안 하면 작품 미생성)
+  useEffect(() => {
+    if (!isLoading && !artworkId && id && hasColoredAnything) {
+      handleCreateArtwork();
+    }
+  }, [isLoading, artworkId, id, hasColoredAnything, handleCreateArtwork]);
+
+  const [isBackModalOpen, setIsBackModalOpen] = useState(false);
+
+  // 뒤로가기 버튼 → 색칠한 게 있으면 모달, 없으면 바로 이동
   const handleBack = () => {
+    if (isResuming || hasColoredAnything) {
+      setIsBackModalOpen(true);
+    } else {
+      navigate(-1);
+    }
+  };
+
+  // 모달에서 "확인" → 임시 저장 후 이동
+  const handleBackConfirm = async () => {
+    if (hasColoredAnything && artworkId) {
+      await handleSaveArtwork(getCanvasFile, getProgress);
+    }
     navigate(-1);
+  };
+
+  // 모달에서 "취소" → 모달 닫고 계속 색칠
+  const handleBackCancel = () => {
+    setIsBackModalOpen(false);
   };
 
   const handleComplete = () => {
@@ -172,6 +215,9 @@ const useColoringPlayPage = () => {
     canRedo,
     isCompleteEnabled,
     handleBack,
+    handleBackConfirm,
+    handleBackCancel,
+    isBackModalOpen,
     handleComplete,
     handleSelectColor,
     handleCanvasTap,
@@ -190,6 +236,7 @@ const useColoringPlayPage = () => {
     handleBrightnessChange,
     handlePaletteApply,
     handlePaletteClose,
+    isSaving,
   };
 };
 

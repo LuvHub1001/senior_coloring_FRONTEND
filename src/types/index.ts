@@ -7,3 +7,10 @@ export type {
   DesignCreateRequest,
   DesignCreateResponse,
 } from "./DesignType";
+export type {
+  ArtworkStatus,
+  Artwork,
+  ArtworkResponse,
+  ArtworkListResponse,
+  ArtworkDeleteResponse,
+} from "./ArtworkType";

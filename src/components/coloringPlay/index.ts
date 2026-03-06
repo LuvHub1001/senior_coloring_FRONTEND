@@ -4,6 +4,7 @@ import { ColoringCanvas } from "@/components/coloringPlay/ColoringCanvas";
 import { ColorPaletteBar } from "@/components/coloringPlay/ColorPaletteBar";
 import { ColoringToolBar } from "@/components/coloringPlay/ColoringToolBar";
 import { PaletteBottomSheet } from "@/components/coloringPlay/PaletteBottomSheet";
+import { SaveConfirmModal } from "@/components/coloringPlay/SaveConfirmModal";
 
 export {
   ColoringLoadingSkeleton,
@@ -12,4 +13,5 @@ export {
   ColorPaletteBar,
   ColoringToolBar,
   PaletteBottomSheet,
+  SaveConfirmModal,
 };
