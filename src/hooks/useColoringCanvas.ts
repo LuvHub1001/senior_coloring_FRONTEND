@@ -8,14 +8,67 @@ const hexToRgba = (hex: string): { r: number; g: number; b: number; a: number } 
   return { r, g, b, a: 255 };
 };
 
-// 스캔라인 플러드 필 — 어두운 선 경계 감지 + 색상 매칭
+// 픽셀 휘도 계산 (ITU-R BT.601 가중치)
+const getLuminance = (r: number, g: number, b: number): number =>
+  0.299 * r + 0.587 * g + 0.114 * b;
+
+// 경계 맵 사전 계산 — 휘도 기반 선 감지 + 안티앨리어싱 팽창
+const buildBoundaryMap = (
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  lineThreshold: number,
+  antiAliasThreshold: number,
+): Uint8Array => {
+  const totalPixels = width * height;
+  const boundary = new Uint8Array(totalPixels);
+
+  // 1단계: 휘도 기반으로 어두운 선 픽셀 탐지
+  for (let i = 0; i < totalPixels; i++) {
+    const idx = i * 4;
+    const lum = getLuminance(data[idx], data[idx + 1], data[idx + 2]);
+    if (lum < lineThreshold) {
+      boundary[i] = 1;
+    }
+  }
+
+  // 2단계: 안티앨리어싱 팽창 — 선에 인접한 반투명 픽셀도 경계로 포함
+  const dilated = new Uint8Array(boundary);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const pi = y * width + x;
+      if (boundary[pi]) continue; // 이미 경계
+
+      // 4방향 이웃 중 경계 픽셀이 있는지 확인
+      const hasNeighborBoundary =
+        (x > 0 && boundary[pi - 1]) ||
+        (x < width - 1 && boundary[pi + 1]) ||
+        (y > 0 && boundary[pi - width]) ||
+        (y < height - 1 && boundary[pi + width]);
+
+      if (hasNeighborBoundary) {
+        const idx = pi * 4;
+        const lum = getLuminance(data[idx], data[idx + 1], data[idx + 2]);
+        // 선 주변의 중간 밝기 픽셀(안티앨리어싱)도 경계로 처리
+        if (lum < antiAliasThreshold) {
+          dilated[pi] = 1;
+        }
+      }
+    }
+  }
+
+  return dilated;
+};
+
+// 스캔라인 플러드 필 — 사전 계산된 경계 맵 + 색상 매칭
 const floodFill = (
   imageData: ImageData,
   startX: number,
   startY: number,
   fillColor: { r: number; g: number; b: number; a: number },
   tolerance: number,
-  lineBoundary: number,
+  lineThreshold: number,
+  antiAliasThreshold: number,
 ): boolean => {
   const { data, width, height } = imageData;
   const startIdx = (startY * width + startX) * 4;
@@ -25,7 +78,8 @@ const floodFill = (
   const startA = data[startIdx + 3];
 
   // 시작 픽셀이 선(어두운 픽셀)이면 채우지 않음
-  if (startR < lineBoundary && startG < lineBoundary && startB < lineBoundary) {
+  const startLum = getLuminance(startR, startG, startB);
+  if (startLum < lineThreshold) {
     return false;
   }
 
@@ -39,15 +93,14 @@ const floodFill = (
     return false;
   }
 
+  // 경계 맵 사전 계산 (안티앨리어싱 포함)
+  const boundaryMap = buildBoundaryMap(data, width, height, lineThreshold, antiAliasThreshold);
+
   const visited = new Uint8Array(width * height);
 
   const canFill = (pixelIdx: number): boolean => {
-    if (visited[pixelIdx]) return false;
+    if (visited[pixelIdx] || boundaryMap[pixelIdx]) return false;
     const idx = pixelIdx * 4;
-    // 어두운 픽셀(선)이면 경계로 취급
-    if (data[idx] < lineBoundary && data[idx + 1] < lineBoundary && data[idx + 2] < lineBoundary) {
-      return false;
-    }
     // 시작 픽셀과 색상 유사성 확인
     return (
       Math.abs(data[idx] - startR) <= tolerance &&
@@ -117,8 +170,9 @@ const floodFill = (
   return true;
 };
 
-const FLOOD_FILL_TOLERANCE = 15;
-const LINE_BOUNDARY_THRESHOLD = 80;
+const FLOOD_FILL_TOLERANCE = 20;
+const LINE_BOUNDARY_THRESHOLD = 110;
+const ANTI_ALIAS_THRESHOLD = 180;
 const MAX_HISTORY = 50;
 
 const useColoringCanvas = (imageUrl: string, selectedColor: string) => {
@@ -194,7 +248,7 @@ const useColoringCanvas = (imageUrl: string, selectedColor: string) => {
 
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const fillColor = hexToRgba(selectedColor);
-      const filled = floodFill(imageData, x, y, fillColor, FLOOD_FILL_TOLERANCE, LINE_BOUNDARY_THRESHOLD);
+      const filled = floodFill(imageData, x, y, fillColor, FLOOD_FILL_TOLERANCE, LINE_BOUNDARY_THRESHOLD, ANTI_ALIAS_THRESHOLD);
 
       if (filled) {
         ctx.putImageData(imageData, 0, 0);

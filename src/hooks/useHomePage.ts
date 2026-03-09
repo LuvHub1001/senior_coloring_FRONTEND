@@ -116,6 +116,8 @@ const useHomePage = () => {
     buttonColor: userProfile?.selectedTheme?.buttonColor ?? "#333D48",
     buttonTextColor: userProfile?.selectedTheme?.buttonTextColor ?? "#FFFFFF",
     textColor: userProfile?.selectedTheme?.textColor ?? "#000000",
+    toggleType: userProfile?.selectedTheme?.toggleType ?? "LIGHT",
+    frameImageUrl: userProfile?.selectedTheme?.frameImageUrl ?? null,
     themes,
     completedArtworks,
     featuredArtwork,
