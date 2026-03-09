@@ -1,30 +1,27 @@
-import frameImage from "@images/home/frame.png";
-
 interface EmptyArtworkFrameProps {
+  frameImageUrl: string;
   onClick: () => void;
 }
 
-function EmptyArtworkFrame({ onClick }: EmptyArtworkFrameProps) {
+function EmptyArtworkFrame({ frameImageUrl, onClick }: EmptyArtworkFrameProps) {
   return (
     <div className="flex flex-1 items-center justify-center relative">
       {/* 그림자 */}
-      <div className="absolute w-[320px] h-[369px] blur-[17px] mix-blend-multiply opacity-10 bg-black rounded-sm" />
+      <div className="absolute w-[320px] h-[384px] blur-[17px] mix-blend-multiply opacity-10 bg-black rounded-sm" />
 
       {/* 액자 프레임 */}
-      <div className="relative w-[320px] h-[369px]">
-        {/* 프레임 이미지 (overflow-hidden으로 클리핑) */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <img
-            src={frameImage}
-            alt="액자 틀"
-            className="absolute w-[116%] h-[151%] left-[-8%] top-[-21%] max-w-none"
-          />
-        </div>
+      <div className="relative w-[320px] h-[384px]">
+        {/* 프레임 이미지 */}
+        <img
+          src={frameImageUrl}
+          alt="액자 틀"
+          className="absolute inset-0 w-[320px] h-[384px] pointer-events-none"
+        />
 
         {/* 액자 내부 콘텐츠 (클릭 영역) */}
         <div
           onClick={onClick}
-          className="absolute left-1/2 -translate-x-1/2 top-[56.5px] w-[186px] h-[254px] rounded-[10px] overflow-hidden flex flex-col items-center justify-center gap-4 pb-[18px] px-3 cursor-pointer"
+          className="absolute left-1/2 -translate-x-1/2 top-[46.5px] w-[185px] h-[265px] rounded-[2px] overflow-hidden flex flex-col items-center justify-center gap-4 pb-[18px] px-3 cursor-pointer"
           style={{
             backgroundImage:
               "linear-gradient(126.2deg, #FCCED8 0%, #BEDBFF 50%, #FEF9C2 100%)",
