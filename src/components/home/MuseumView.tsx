@@ -1,4 +1,3 @@
-import defaultFrameImage from "@images/home/frame.png";
 import { useImageCarousel } from "@/hooks/useImageCarousel";
 
 interface ArtworkThumbnail {
@@ -16,7 +15,7 @@ interface MuseumViewProps {
   buttonColor: string;
   buttonTextColor: string;
   textColor: string;
-  frameImageUrl: string | null;
+  frameImageUrl: string;
   onCreateArtwork: () => void;
   onFeatureArtwork: (artworkId: string) => void;
 }
@@ -35,7 +34,7 @@ function MuseumView({
   onCreateArtwork,
   onFeatureArtwork,
 }: MuseumViewProps) {
-  const frameImage = frameImageUrl ?? defaultFrameImage;
+  const frameImage = frameImageUrl;
   const { containerRef, repeatCount } = useImageCarousel(artworks.length, 0.3);
 
   return (
@@ -69,17 +68,17 @@ function MuseumView({
 
       {/* 액자 속 작품 */}
       <div className="flex flex-1 items-center justify-center">
-        <div className="relative w-[320px] aspect-[823/951]">
+        <div className="relative w-[320px] h-[384px]">
           {/* 액자 프레임 */}
           <img
             src={frameImage}
             alt="액자"
-            className="absolute inset-0 z-10 size-full object-contain pointer-events-none"
+            className="absolute inset-0 z-10 w-[320px] h-[384px] pointer-events-none"
           />
           {/* 작품 이미지 (프레임 내부 회색 영역 위에 배치) */}
           <div
-            className="absolute z-20 overflow-hidden rounded-[4px]"
-            style={{ left: "22%", top: "19.4%", width: "55.9%", height: "60.5%" }}
+            className="absolute left-1/2 -translate-x-1/2 z-20 overflow-hidden rounded-[2px]"
+            style={{ top: "46.5px", width: "185px", height: "265px" }}
           >
             <img
               src={featuredImageUrl}

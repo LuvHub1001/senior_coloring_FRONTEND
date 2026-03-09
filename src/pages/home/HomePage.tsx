@@ -91,7 +91,7 @@ function HomePage() {
           />
 
           {/* 빈 액자 */}
-          <EmptyArtworkFrame onClick={handleCreateArtwork} />
+          <EmptyArtworkFrame frameImageUrl={frameImageUrl} onClick={handleCreateArtwork} />
 
           {/* 하단 버튼 */}
           <CreateArtworkButton onClick={handleCreateArtwork} />
