@@ -1,22 +1,29 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useDesignList } from "@/hooks/useDesigns";
+import { useDesignList, useDesignDetail, useDesignCategories } from "@/hooks/useDesigns";
 import { getArtworks, deleteArtwork } from "@/apis/ArtworkFetcher";
 import type { Artwork } from "@/types";
-
-const CATEGORIES = ["전체", "식물", "동물", "풍경", "사물"];
 
 const useColoringBookPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [selectedCategory, setSelectedCategory] = useState("전체");
+
+  // 카테고리 목록 API 조회 ("전체" 앞에 추가)
+  const { categories: apiCategories } = useDesignCategories();
+  const categories = ["전체", ...apiCategories];
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const [selectedDesignId, setSelectedDesignId] = useState<string | null>(null);
 
   // 카테고리 필터링: "전체"면 undefined로 전달하여 전체 조회
   const categoryParam = selectedCategory === "전체" ? undefined : selectedCategory;
   const { designs } = useDesignList(categoryParam);
+
+  // 도안 상세 조회 (모달용)
+  const { design: selectedDesign, isLoading: isDesignDetailLoading } =
+    useDesignDetail(selectedDesignId ?? "");
 
   // 진행중인 작품 목록 조회
   const { data: artworksData } = useQuery({
@@ -118,15 +125,27 @@ const useColoringBookPage = () => {
     setIsMoreMenuOpen(false);
   };
 
+  // 도안 클릭 → 상세 모달 열기
   const handleColoringItemClick = (id: string) => {
-    const design = filteredItems.find((item) => item.id === id);
-    navigate(`/coloring/${id}`, {
-      state: { imageUrl: design?.imageUrl, title: design?.title },
+    setSelectedDesignId(id);
+  };
+
+  // 상세 모달 닫기
+  const handleCloseDesignDetail = () => {
+    setSelectedDesignId(null);
+  };
+
+  // 상세 모달에서 색칠하기 시작
+  const handleStartColoring = () => {
+    if (!selectedDesign) return;
+    setSelectedDesignId(null);
+    navigate(`/coloring/${selectedDesign.id}`, {
+      state: { imageUrl: selectedDesign.imageUrl, title: selectedDesign.title },
     });
   };
 
   return {
-    categories: CATEGORIES,
+    categories,
     selectedCategory,
     progressItems,
     filteredItems,
@@ -142,6 +161,10 @@ const useColoringBookPage = () => {
     handleToggleMoreMenu,
     handleDeleteArtwork,
     handleShareArtwork,
+    selectedDesign,
+    isDesignDetailLoading,
+    handleCloseDesignDetail,
+    handleStartColoring,
   };
 };
 

@@ -5,6 +5,7 @@ import { CategoryFilter } from "@/components/coloring/CategoryFilter";
 import { ColoringItem } from "@/components/coloring/ColoringItem";
 import { ColoringItemGrid } from "@/components/coloring/ColoringItemGrid";
 import { ArtworkPreviewModal } from "@/components/coloring/ArtworkPreviewModal";
+import { DesignDetailModal } from "@/components/coloring/DesignDetailModal";
 
 export {
   ColoringHeader,
@@ -14,4 +15,5 @@ export {
   ColoringItem,
   ColoringItemGrid,
   ArtworkPreviewModal,
+  DesignDetailModal,
 };

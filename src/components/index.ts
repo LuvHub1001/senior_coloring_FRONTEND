@@ -18,6 +18,7 @@ import {
   ColoringItem,
   ColoringItemGrid,
   ArtworkPreviewModal,
+  DesignDetailModal,
 } from "@/components/coloring";
 import {
   ColoringLoadingSkeleton,
@@ -52,6 +53,7 @@ export {
   ColoringItem,
   ColoringItemGrid,
   ArtworkPreviewModal,
+  DesignDetailModal,
   ColoringLoadingSkeleton,
   ColoringPlayHeader,
   ColoringCanvas,

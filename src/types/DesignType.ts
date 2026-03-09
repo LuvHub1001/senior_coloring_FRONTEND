@@ -3,6 +3,7 @@ export interface Design {
   title: string;
   category: string;
   imageUrl: string;
+  originalImageUrl?: string;
   description?: string;
   createdAt: string;
 }
@@ -22,6 +23,11 @@ export interface DesignCreateRequest {
   title: string;
   category: string;
   description?: string;
+}
+
+export interface DesignCategoryResponse {
+  success: boolean;
+  data: string[];
 }
 
 export interface DesignCreateResponse {

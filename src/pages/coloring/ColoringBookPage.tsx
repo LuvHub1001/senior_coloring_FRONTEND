@@ -4,6 +4,7 @@ import {
   CategoryFilter,
   ColoringItemGrid,
   ArtworkPreviewModal,
+  DesignDetailModal,
 } from "@/components";
 import { useColoringBookPage } from "@/hooks";
 
@@ -25,6 +26,10 @@ function ColoringBookPage() {
     handleToggleMoreMenu,
     handleDeleteArtwork,
     handleShareArtwork,
+    selectedDesign,
+    isDesignDetailLoading,
+    handleCloseDesignDetail,
+    handleStartColoring,
   } = useColoringBookPage();
 
   return (
@@ -60,6 +65,16 @@ function ColoringBookPage() {
           />
         </section>
       </div>
+
+      {/* 도안 상세 모달 */}
+      {selectedDesign && (
+        <DesignDetailModal
+          design={selectedDesign}
+          isLoading={isDesignDetailLoading}
+          onClose={handleCloseDesignDetail}
+          onStartColoring={handleStartColoring}
+        />
+      )}
 
       {/* 임시저장 작품 프리뷰 모달 */}
       {selectedArtwork && (

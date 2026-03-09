@@ -12,6 +12,7 @@ export type {
   DesignListResponse,
   DesignDetailResponse,
   DesignCreateRequest,
+  DesignCategoryResponse,
   DesignCreateResponse,
 } from "./DesignType";
 export type {

@@ -2,6 +2,7 @@ import instance from "@/apis";
 import type {
   DesignListResponse,
   DesignDetailResponse,
+  DesignCategoryResponse,
   DesignCreateRequest,
   DesignCreateResponse,
 } from "@/types";
@@ -10,6 +11,12 @@ import type {
 export const getDesigns = async (category?: string): Promise<DesignListResponse> => {
   const params = category ? { category } : undefined;
   const { data } = await instance.get<DesignListResponse>("/api/designs", { params });
+  return data;
+};
+
+// 도안 카테고리 목록 조회
+export const getDesignCategories = async (): Promise<DesignCategoryResponse> => {
+  const { data } = await instance.get<DesignCategoryResponse>("/api/designs/categories");
   return data;
 };
 
