@@ -20,6 +20,8 @@ function HomePage() {
     buttonColor,
     buttonTextColor,
     textColor,
+    toggleType,
+    frameImageUrl,
     themes,
     completedArtworks,
     featuredArtwork,
@@ -58,6 +60,7 @@ function HomePage() {
             buttonColor={buttonColor}
             buttonTextColor={buttonTextColor}
             textColor={textColor}
+            frameImageUrl={frameImageUrl}
             onCreateArtwork={handleCreateArtwork}
             onFeatureArtwork={handleFeatureArtwork}
           />
@@ -66,6 +69,7 @@ function HomePage() {
           <div className="absolute top-0 left-0 w-full z-10">
             <HomeNavBar
               activeTab={activeTab}
+              toggleType={toggleType}
               onTabChange={handleTabChange}
               onThemeClick={handleThemeClick}
             />

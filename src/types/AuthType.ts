@@ -10,6 +10,8 @@ export interface SelectedTheme {
   buttonColor: string;
   buttonTextColor: string;
   textColor: string;
+  toggleType: "LIGHT" | "DARK";
+  frameImageUrl: string | null;
 }
 
 export interface UserProfile {
