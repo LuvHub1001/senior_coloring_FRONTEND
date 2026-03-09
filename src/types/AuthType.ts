@@ -27,3 +27,20 @@ export interface UserProfileResponse {
   success: boolean;
   data: UserProfile;
 }
+
+export interface TokenRefreshRequest {
+  refreshToken: string;
+}
+
+export interface TokenRefreshResponse {
+  success: boolean;
+  data: {
+    accessToken: string;
+    refreshToken: string;
+  };
+}
+
+export interface LogoutResponse {
+  success: boolean;
+  data: null;
+}
