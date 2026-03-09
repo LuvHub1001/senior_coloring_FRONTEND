@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { getDesigns, getDesignById, createDesign } from "@/apis/DesignFetcher";
+import { getDesigns, getDesignById, getDesignCategories, createDesign } from "@/apis/DesignFetcher";
 import type { DesignCreateRequest } from "@/types";
 
 // 도안 목록 조회
@@ -11,6 +11,20 @@ export const useDesignList = (category?: string) => {
 
   return {
     designs: data?.data ?? [],
+    isLoading,
+    isError,
+  };
+};
+
+// 도안 카테고리 목록 조회
+export const useDesignCategories = () => {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["designCategories"],
+    queryFn: getDesignCategories,
+  });
+
+  return {
+    categories: data?.data ?? [],
     isLoading,
     isError,
   };

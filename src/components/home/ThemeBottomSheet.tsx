@@ -38,7 +38,7 @@ function ThemeBottomSheet({
       />
 
       {/* 바텀시트 */}
-      <div className="relative w-full max-h-[85vh] bg-white rounded-t-3xl overflow-y-auto">
+      <div className="relative w-full h-[70vh] bg-white rounded-t-3xl overflow-y-auto">
         {/* 닫기 버튼 */}
         <div className="flex items-center justify-end px-5 pt-4">
           <button

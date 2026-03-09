@@ -6,7 +6,7 @@ import { useColoringPlayPage } from "@/hooks/useColoringPlayPage";
 import { useLoginPage } from "@/hooks/useLoginPage";
 import { useAuthCallbackPage } from "@/hooks/useAuthCallbackPage";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { useDesignList, useDesignDetail, useCreateDesign } from "@/hooks/useDesigns";
+import { useDesignList, useDesignDetail, useDesignCategories, useCreateDesign } from "@/hooks/useDesigns";
 import { useColoringCanvas } from "@/hooks/useColoringCanvas";
 import { useArtworkSave } from "@/hooks/useArtworkSave";
 import { useCompletionPage } from "@/hooks/useCompletionPage";
@@ -22,6 +22,7 @@ export {
   useUserProfile,
   useDesignList,
   useDesignDetail,
+  useDesignCategories,
   useCreateDesign,
   useColoringCanvas,
   useArtworkSave,
