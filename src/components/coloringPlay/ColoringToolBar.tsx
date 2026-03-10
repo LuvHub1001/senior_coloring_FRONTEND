@@ -32,8 +32,9 @@ function ColoringToolBar({
         onClick={onUndo}
         icon={
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12.5 5L7.5 10L12.5 10" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M7.5 6.67V13.33C7.5 14.25 8.25 15 9.17 15H15" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M4 8L8 4" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M4 8L8 12" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M4 8H12C14.2091 8 16 9.7909 16 12V12C16 14.2091 14.2091 16 12 16H10" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         }
       />
@@ -45,8 +46,9 @@ function ColoringToolBar({
         onClick={onRedo}
         icon={
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M7.5 5L12.5 10L7.5 10" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M12.5 6.67V13.33C12.5 14.25 11.75 15 10.83 15H5" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M16 8L12 4" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M16 8L12 12" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M16 8H8C5.79086 8 4 9.7909 4 12V12C4 14.2091 5.79086 16 8 16H10" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         }
       />

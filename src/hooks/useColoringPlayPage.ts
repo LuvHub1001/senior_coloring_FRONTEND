@@ -50,6 +50,8 @@ const DEFAULT_COLORS = [
   "#3B82F6",
   "#8B5CF6",
   "#EC4899",
+  "#6B7684",
+  "#191F28",
 ];
 
 const MIN_LOADING_MS = 2500;

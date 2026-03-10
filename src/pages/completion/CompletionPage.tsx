@@ -1,6 +1,6 @@
 import { CompletionScreen, AchievementModal } from "@/components";
 import { useCompletionPage } from "@/hooks";
-import frameImage from "@images/home/frame.png";
+import frameImage from "@images/home/gold_frame.svg";
 
 function CompletionPage() {
   const {
