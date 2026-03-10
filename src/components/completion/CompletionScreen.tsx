@@ -45,18 +45,15 @@ function CompletionScreen({
         </div>
 
         {/* 액자 속 작품 */}
-        <div className="relative mt-4 aspect-square w-[280px]">
+        <div className="relative mt-4 w-[320px] h-[384px]">
           {/* 액자 프레임 */}
           <img
             src={frameImageUrl}
             alt="액자"
-            className="absolute inset-0 z-10 size-full object-contain pointer-events-none"
+            className="absolute inset-0 w-[320px] h-[384px] pointer-events-none"
           />
-          {/* 작품 이미지 — 액자 내부 영역 위에 배치 */}
-          <div
-            className="absolute z-20 overflow-hidden rounded-[4px]"
-            style={{ left: "16%", top: "14%", width: "68%", height: "72%" }}
-          >
+          {/* 작품 이미지 — 액자 내부 중앙 */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 overflow-hidden rounded-[4px]" style={{ width: "179px", height: "232px" }}>
             <img
               src={artworkImageUrl}
               alt="완성된 작품"

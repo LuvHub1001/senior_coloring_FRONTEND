@@ -1,28 +1,33 @@
 interface CreateArtworkButtonProps {
   onClick: () => void;
+  buttonColor?: string;
+  buttonTextColor?: string;
 }
 
-function CreateArtworkButton({ onClick }: CreateArtworkButtonProps) {
+function CreateArtworkButton({
+  onClick,
+  buttonColor,
+  buttonTextColor,
+}: CreateArtworkButtonProps) {
   return (
     <div className="w-full shrink-0">
-      {/* 상단 페이드 그라데이션 */}
-      <div className="h-9 bg-gradient-to-t from-[#F9FAFB] to-transparent" />
-
-      {/* 버튼 영역 */}
-      <div className="px-5 bg-[#F9FAFB]">
+      <div className="h-9" />
+      <div className="px-5">
         <button
           type="button"
           onClick={onClick}
-          className="flex w-full h-14 items-center justify-center rounded-2xl bg-[#333D48] cursor-pointer"
+          className="flex w-full h-14 items-center justify-center rounded-2xl cursor-pointer"
+          style={{ backgroundColor: buttonColor ?? "#333D48" }}
         >
-          <span className="text-[19px] font-bold text-white tracking-[-0.095px] leading-[28px]">
+          <span
+            className="text-[19px] font-bold tracking-[-0.095px] leading-[28px]"
+            style={{ color: buttonTextColor ?? "#FFFFFF" }}
+          >
             작품 만들기
           </span>
         </button>
       </div>
-
-      {/* 하단 여백 (홈 인디케이터 영역) */}
-      <div className="h-[34px] bg-[#F9FAFB]" />
+      <div className="h-[34px]" />
     </div>
   );
 }

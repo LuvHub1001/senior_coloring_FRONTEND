@@ -11,6 +11,7 @@ import { useColoringCanvas } from "@/hooks/useColoringCanvas";
 import { useArtworkSave } from "@/hooks/useArtworkSave";
 import { useCompletionPage } from "@/hooks/useCompletionPage";
 import { useLogout } from "@/hooks/useLogout";
+import { useArtworkDetail } from "@/hooks/useArtworkDetail";
 
 export {
   useImageCarousel,
@@ -28,4 +29,5 @@ export {
   useArtworkSave,
   useCompletionPage,
   useLogout,
+  useArtworkDetail,
 };

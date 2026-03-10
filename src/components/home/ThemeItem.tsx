@@ -55,7 +55,7 @@ function ThemeItem({
         <img
           src={imageUrl}
           alt={name}
-          className="size-[72px] shrink-0 rounded-[9px] object-cover"
+          className="size-[72px] shrink-0 rounded-[9px] border border-[#E5E8EB] object-cover"
         />
 
         {/* 테마 정보 */}

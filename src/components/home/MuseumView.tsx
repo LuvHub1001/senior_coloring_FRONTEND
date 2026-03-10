@@ -1,4 +1,3 @@
-import { useImageCarousel } from "@/hooks/useImageCarousel";
 
 interface ArtworkThumbnail {
   id: string;
@@ -18,6 +17,7 @@ interface MuseumViewProps {
   frameImageUrl: string;
   onCreateArtwork: () => void;
   onFeatureArtwork: (artworkId: string) => void;
+  onArtworkClick: () => void;
 }
 
 function MuseumView({
@@ -33,9 +33,9 @@ function MuseumView({
   frameImageUrl,
   onCreateArtwork,
   onFeatureArtwork,
+  onArtworkClick,
 }: MuseumViewProps) {
   const frameImage = frameImageUrl;
-  const { containerRef, repeatCount } = useImageCarousel(artworks.length, 0.3);
 
   return (
     <div
@@ -76,8 +76,10 @@ function MuseumView({
             className="absolute inset-0 w-[320px] h-[384px] pointer-events-none"
           />
           {/* 작품 이미지 (SVG 내부 영역에 맞춤) */}
-          <div
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 overflow-hidden rounded-[4px]"
+          <button
+            type="button"
+            onClick={onArtworkClick}
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 overflow-hidden rounded-[4px] cursor-pointer"
             style={{ width: "179px", height: "232px" }}
           >
             <img
@@ -85,34 +87,28 @@ function MuseumView({
               alt="전시된 작품"
               className="size-full object-cover"
             />
-          </div>
+          </button>
         </div>
       </div>
 
-      {/* 작품 캐러셀 */}
-      {artworks.length > 1 && (
-        <div className="overflow-hidden p-5">
-          <div ref={containerRef} className="flex gap-4 will-change-transform">
-            {Array.from({ length: repeatCount }, (_, setIndex) =>
-              artworks.map((artwork) => (
-                <button
-                  key={`${setIndex}-${artwork.id}`}
-                  type="button"
-                  onClick={() => onFeatureArtwork(artwork.id)}
-                  className={`size-[68px] shrink-0 rounded-[13.161px] border-2 cursor-pointer ${
-                    artwork.id === featuredArtworkId
-                      ? "border-[#191f28]"
-                      : "border-transparent"
-                  }`}
-                >
-                  <img
-                    src={artwork.imageUrl ?? ""}
-                    alt="작품 썸네일"
-                    className="m-[4.25px] size-[59.5px] object-cover rounded-[10.625px]"
-                  />
-                </button>
-              ))
-            )}
+      {/* 작품 썸네일 목록 */}
+      {artworks.length > 0 && (
+        <div className="overflow-x-auto scrollbar-hide p-5">
+          <div className="flex gap-4 justify-center">
+            {artworks.map((artwork) => (
+              <button
+                key={artwork.id}
+                type="button"
+                onClick={() => onFeatureArtwork(artwork.id)}
+                className="size-[68px] shrink-0 rounded-[13.161px] cursor-pointer"
+              >
+                <img
+                  src={artwork.imageUrl ?? ""}
+                  alt="작품 썸네일"
+                  className="m-[4px] size-[60px] object-cover rounded-[8px]"
+                />
+              </button>
+            ))}
           </div>
         </div>
       )}
