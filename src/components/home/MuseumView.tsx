@@ -73,12 +73,12 @@ function MuseumView({
           <img
             src={frameImage}
             alt="액자"
-            className="absolute inset-0 z-10 w-[320px] h-[384px] pointer-events-none"
+            className="absolute inset-0 w-[320px] h-[384px] pointer-events-none"
           />
-          {/* 작품 이미지 (프레임 내부 회색 영역 위에 배치) */}
+          {/* 작품 이미지 (SVG 내부 영역에 맞춤) */}
           <div
-            className="absolute left-1/2 -translate-x-1/2 z-20 overflow-hidden rounded-[2px]"
-            style={{ top: "46.5px", width: "185px", height: "265px" }}
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 overflow-hidden rounded-[4px]"
+            style={{ width: "179px", height: "232px" }}
           >
             <img
               src={featuredImageUrl}
@@ -91,24 +91,24 @@ function MuseumView({
 
       {/* 작품 캐러셀 */}
       {artworks.length > 1 && (
-        <div className="overflow-hidden px-5 py-3">
-          <div ref={containerRef} className="flex gap-3 will-change-transform">
+        <div className="overflow-hidden p-5">
+          <div ref={containerRef} className="flex gap-4 will-change-transform">
             {Array.from({ length: repeatCount }, (_, setIndex) =>
               artworks.map((artwork) => (
                 <button
                   key={`${setIndex}-${artwork.id}`}
                   type="button"
                   onClick={() => onFeatureArtwork(artwork.id)}
-                  className={`size-[68px] shrink-0 overflow-hidden rounded-[13px] border-2 cursor-pointer ${
+                  className={`size-[68px] shrink-0 rounded-[13.161px] border-2 cursor-pointer ${
                     artwork.id === featuredArtworkId
-                      ? "border-white"
+                      ? "border-[#191f28]"
                       : "border-transparent"
                   }`}
                 >
                   <img
                     src={artwork.imageUrl ?? ""}
                     alt="작품 썸네일"
-                    className="size-full object-cover rounded-[11px]"
+                    className="m-[4.25px] size-[59.5px] object-cover rounded-[10.625px]"
                   />
                 </button>
               ))

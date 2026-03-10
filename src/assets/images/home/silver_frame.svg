@@ -1,10 +1,15 @@
-<svg width="823" height="951" viewBox="0 0 823 951" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="823" height="951" viewBox="0 0 823 951" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g filter="url(#filter0_d_214_21872)">
 <rect x="74.1667" y="54.3333" width="674" height="834" fill="url(#pattern0_214_21872)"/>
 <rect x="149.167" y="152.333" width="524" height="639" rx="4" fill="white" fill-opacity="0.6"/>
-<rect x="181.167" y="184.333" width="460" height="575" rx="4" fill="#C3C3C3"/>
+<rect x="181.167" y="184.333" width="460" height="575" rx="4" fill="none"/>
 </g>
 <defs>
+<linearGradient id="emptyGradient_silver" x1="23%" y1="8%" x2="77%" y2="92%">
+<stop offset="0%" stop-color="#F9CFE9"/>
+<stop offset="48%" stop-color="#BFDBFF"/>
+<stop offset="100%" stop-color="#FAF7C6"/>
+</linearGradient>
 <filter id="filter0_d_214_21872" x="0" y="0" width="822.333" height="950.667" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
 <feFlood flood-opacity="0" result="BackgroundImageFix"/>
 <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>

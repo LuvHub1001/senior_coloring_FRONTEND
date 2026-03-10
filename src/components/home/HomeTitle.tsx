@@ -5,7 +5,7 @@ interface HomeTitleProps {
 
 function HomeTitle({ userName, subtitle }: HomeTitleProps) {
   return (
-    <div className="flex flex-col items-center gap-2 px-6 pt-8 pb-4">
+    <div className="flex flex-col items-center gap-2 px-6 pt-8 pb-2">
       <h1 className="text-[26px] font-bold text-[#191F28] tracking-[-0.13px] leading-[35px] text-center">
         {userName}님의 미술관
       </h1>

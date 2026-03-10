@@ -4,6 +4,17 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { getThemes, selectTheme } from "@/apis/ThemeFetcher";
 import { getArtworks, featureArtwork } from "@/apis/ArtworkFetcher";
+import goldFrame from "@images/home/gold_frame.svg";
+import silverFrame from "@images/home/silver_frame.svg";
+
+// 테마명 기준 액자 프레임 매핑
+// 화이트, 버건디 → 골드 / 네이비, 블루, 퍼플 → 실버
+const SILVER_THEMES = ["네이비", "블루", "퍼플"];
+
+const getFrameImage = (themeName: string): string => {
+  const isSilver = SILVER_THEMES.some((keyword) => themeName.includes(keyword));
+  return isSilver ? silverFrame : goldFrame;
+};
 
 interface HomeLocationState {
   isNewUser?: boolean;
@@ -117,7 +128,7 @@ const useHomePage = () => {
     buttonTextColor: userProfile?.selectedTheme?.buttonTextColor ?? "#FFFFFF",
     textColor: userProfile?.selectedTheme?.textColor ?? "#000000",
     toggleType: userProfile?.selectedTheme?.toggleType ?? "LIGHT",
-    frameImageUrl: userProfile?.selectedTheme?.frameImageUrl ?? "",
+    frameImageUrl: getFrameImage(userProfile?.selectedTheme?.name ?? ""),
     themes,
     completedArtworks,
     featuredArtwork,

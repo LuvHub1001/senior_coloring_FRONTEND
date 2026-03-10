@@ -6,28 +6,30 @@ interface EmptyArtworkFrameProps {
 function EmptyArtworkFrame({ frameImageUrl, onClick }: EmptyArtworkFrameProps) {
   return (
     <div className="flex flex-1 items-center justify-center relative">
-      {/* 그림자 */}
-      <div className="absolute w-[320px] h-[384px] blur-[17px] mix-blend-multiply opacity-10 bg-black rounded-sm" />
-
-      {/* 액자 프레임 */}
       <div className="relative w-[320px] h-[384px]">
-        {/* 프레임 이미지 */}
+        {/* 액자 프레임 이미지 (흰색 마진 포함) */}
         <img
           src={frameImageUrl}
           alt="액자 틀"
           className="absolute inset-0 w-[320px] h-[384px] pointer-events-none"
         />
 
-        {/* 액자 내부 콘텐츠 (클릭 영역) */}
+        {/* 그라데이션 박스 (SVG 내부 그라데이션 영역에 맞춤) */}
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 rounded-[4px]"
+          style={{
+            width: "179px",
+            height: "232px",
+            background:
+              "linear-gradient(141deg, #F9CFE9 0.14%, #BFDBFF 48.02%, #FAF7C6 100.03%)",
+          }}
+        />
+
+        {/* 플러스 아이콘 + 안내 텍스트 */}
         <div
           onClick={onClick}
-          className="absolute left-1/2 -translate-x-1/2 top-[46.5px] w-[185px] h-[265px] rounded-[2px] overflow-hidden flex flex-col items-center justify-center gap-4 pb-[18px] px-3 cursor-pointer"
-          style={{
-            backgroundImage:
-              "linear-gradient(126.2deg, #FCCED8 0%, #BEDBFF 50%, #FEF9C2 100%)",
-          }}
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 cursor-pointer"
         >
-          {/* 플러스 아이콘 */}
           <div className="flex size-20 items-center justify-center rounded-full bg-[rgba(255,255,255,0.7)]">
             <svg
               width="24"
@@ -44,8 +46,6 @@ function EmptyArtworkFrame({ frameImageUrl, onClick }: EmptyArtworkFrameProps) {
               />
             </svg>
           </div>
-
-          {/* 안내 텍스트 */}
           <p className="text-[19px] font-medium text-[#4E5968] tracking-[-0.095px] leading-[28px] text-center whitespace-nowrap">
             이 액자에
             <br />
