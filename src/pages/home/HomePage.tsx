@@ -6,8 +6,10 @@ import {
   ThemeBottomSheet,
   WelcomeOverlay,
   MuseumView,
+  ArtworkDetailOverlay,
+  DeleteConfirmModal,
 } from "@/components";
-import { useHomePage } from "@/hooks";
+import { useHomePage, useArtworkDetail } from "@/hooks";
 
 function HomePage() {
   const {
@@ -33,6 +35,22 @@ function HomePage() {
     handleWelcomeDismiss,
     handleFeatureArtwork,
   } = useHomePage();
+
+  const {
+    isDetailOpen,
+    isMenuOpen,
+    isDeleteConfirmOpen,
+    selectedArtwork,
+    dateLabel,
+    handleOpenDetail,
+    handleCloseDetail,
+    handleMenuToggle,
+    handleEdit,
+    handleShare,
+    handleDeleteClick,
+    handleDeleteConfirm,
+    handleDeleteCancel,
+  } = useArtworkDetail();
 
   if (showWelcome) {
     return (
@@ -63,6 +81,9 @@ function HomePage() {
             frameImageUrl={frameImageUrl}
             onCreateArtwork={handleCreateArtwork}
             onFeatureArtwork={handleFeatureArtwork}
+            onArtworkClick={() => {
+              if (featuredArtwork) handleOpenDetail(featuredArtwork);
+            }}
           />
 
           {/* 네비게이션 (미술관 위에 오버레이) */}
@@ -76,10 +97,14 @@ function HomePage() {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col min-h-dvh bg-[#F9FAFB] relative">
+        <div
+          className="flex flex-col min-h-dvh bg-cover bg-center bg-no-repeat relative"
+          style={{ backgroundImage: `url(${selectedThemeImageUrl})` }}
+        >
           {/* 네비게이션 */}
           <HomeNavBar
             activeTab={activeTab}
+            toggleType={toggleType}
             onTabChange={handleTabChange}
             onThemeClick={handleThemeClick}
           />
@@ -88,13 +113,18 @@ function HomePage() {
           <HomeTitle
             userName={userName}
             subtitle="그림을 그려서 내 미술관에 전시해요"
+            textColor={textColor}
           />
 
           {/* 빈 액자 */}
           <EmptyArtworkFrame frameImageUrl={frameImageUrl} onClick={handleCreateArtwork} />
 
           {/* 하단 버튼 */}
-          <CreateArtworkButton onClick={handleCreateArtwork} />
+          <CreateArtworkButton
+            onClick={handleCreateArtwork}
+            buttonColor={buttonColor}
+            buttonTextColor={buttonTextColor}
+          />
         </div>
       )}
 
@@ -106,6 +136,30 @@ function HomePage() {
         onClose={handleThemeClose}
         onSelectTheme={handleSelectTheme}
       />
+
+      {/* 작품 상세 오버레이 */}
+      {isDetailOpen && selectedArtwork && (
+        <ArtworkDetailOverlay
+          title={selectedArtwork.design.title}
+          imageUrl={selectedArtwork.imageUrl ?? ""}
+          dateLabel={dateLabel}
+          reactionCount={0}
+          isMenuOpen={isMenuOpen}
+          onMenuToggle={handleMenuToggle}
+          onClose={handleCloseDetail}
+          onEdit={handleEdit}
+          onShare={handleShare}
+          onDelete={handleDeleteClick}
+        />
+      )}
+
+      {/* 삭제 확인 모달 */}
+      {isDeleteConfirmOpen && (
+        <DeleteConfirmModal
+          onCancel={handleDeleteCancel}
+          onConfirm={handleDeleteConfirm}
+        />
+      )}
     </>
   );
 }

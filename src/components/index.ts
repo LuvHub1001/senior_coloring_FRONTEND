@@ -9,6 +9,8 @@ import {
   ThemeItem,
   WelcomeOverlay,
   MuseumView,
+  ArtworkDetailOverlay,
+  DeleteConfirmModal,
 } from "@/components/home";
 import {
   ColoringHeader,
@@ -46,6 +48,8 @@ export {
   ThemeItem,
   WelcomeOverlay,
   MuseumView,
+  ArtworkDetailOverlay,
+  DeleteConfirmModal,
   ColoringHeader,
   ProgressCard,
   ProgressSection,
