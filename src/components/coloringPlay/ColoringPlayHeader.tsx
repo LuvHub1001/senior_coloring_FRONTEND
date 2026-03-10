@@ -19,7 +19,7 @@ function ColoringPlayHeader({
           <button
             type="button"
             onClick={onBack}
-            className="flex size-10 items-center justify-center cursor-pointer"
+            className="flex size-[40px] items-center justify-center cursor-pointer"
           >
             <svg
               width="24"
@@ -39,7 +39,7 @@ function ColoringPlayHeader({
           </button>
 
           {/* 도안 제목 */}
-          <span className="flex-1 text-[17px] font-bold text-[#191F28] tracking-[-0.085px] leading-[25.5px]">
+          <span className="flex-1 text-[17px] font-[700] text-[#191F28] tracking-[-0.085px] leading-[25.5px]">
             {title}
           </span>
 
@@ -49,9 +49,9 @@ function ColoringPlayHeader({
               type="button"
               onClick={onComplete}
               disabled={!isCompleteEnabled}
-              className={`h-10 rounded-[64px] px-3 text-[15px] font-bold tracking-[-0.075px] leading-[22.5px] cursor-pointer ${
+              className={`h-[40px] rounded-[64px] px-[12px] py-[8px] text-[15px] font-[700] tracking-[-0.075px] leading-[22.5px] cursor-pointer ${
                 isCompleteEnabled
-                  ? "bg-[#333D48] text-white"
+                  ? "bg-[#191F28] text-white"
                   : "bg-[rgba(2,32,71,0.05)] text-[rgba(0,25,54,0.31)]"
               }`}
             >

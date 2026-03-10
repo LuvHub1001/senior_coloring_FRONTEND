@@ -12,18 +12,18 @@ function ZoomControls({
   return (
     <>
       {/* 줌 퍼센트 표시 (좌측 top-5 left-5) */}
-      <div className="absolute left-5 top-5 z-10 flex h-[38px] items-center justify-center rounded-full bg-white px-4 shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
-        <p className="whitespace-nowrap text-[15px] font-medium leading-[22.5px] tracking-[-0.075px] text-[#364153]">
+      <div className="absolute left-5 top-5 z-10 flex h-[38px] items-center justify-center rounded-full bg-white px-[16px] shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
+        <p className="whitespace-nowrap text-[15px] font-[500] leading-[22.5px] tracking-[-0.075px] text-[#364153]">
           {zoomPercent}%
         </p>
       </div>
 
       {/* 줌 인/아웃 버튼 (우측 top-5 right-5) */}
-      <div className="absolute right-5 top-5 z-10 flex flex-col gap-2">
+      <div className="absolute right-5 top-5 z-10 flex flex-col gap-[8px]">
         <button
           type="button"
           onClick={onZoomIn}
-          className="flex size-10 items-center justify-center rounded-full bg-white shadow-[0px_4px_6px_rgba(0,0,0,0.1)]"
+          className="flex size-[40px] items-center justify-center rounded-full bg-white shadow-[0px_4px_6px_rgba(0,0,0,0.1)]"
           aria-label="확대"
         >
           <svg
@@ -66,7 +66,7 @@ function ZoomControls({
         <button
           type="button"
           onClick={onZoomOut}
-          className="flex size-10 items-center justify-center rounded-full bg-white shadow-[0px_4px_6px_rgba(0,0,0,0.1)]"
+          className="flex size-[40px] items-center justify-center rounded-full bg-white shadow-[0px_4px_6px_rgba(0,0,0,0.1)]"
           aria-label="축소"
         >
           <svg

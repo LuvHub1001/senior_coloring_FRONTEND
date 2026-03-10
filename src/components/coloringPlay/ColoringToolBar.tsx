@@ -58,7 +58,7 @@ function ColoringToolBar({
         <button
           type="button"
           onClick={onPalette}
-          className="flex w-14 flex-col items-center gap-1 cursor-pointer"
+          className="flex w-[56px] flex-col items-center gap-[4px] cursor-pointer"
         >
           <div
             className="shrink-0 rounded-full border-[1.67px] p-[3.33px]"
@@ -69,7 +69,7 @@ function ColoringToolBar({
               style={{ backgroundColor: selectedColor }}
             />
           </div>
-          <span className="text-[10px] font-bold text-[#6B7684] tracking-[-0.05px] leading-[12px]">
+          <span className="text-[10px] font-[700] text-[#6B7684] tracking-[-0.05px] leading-[12px]">
             팔레트
           </span>
         </button>
@@ -141,18 +141,18 @@ function ToolButton({ label, icon, disabled = false, active = false, onClick }: 
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`flex w-14 flex-col items-center gap-1 cursor-pointer ${
+      className={`flex w-[56px] flex-col items-center gap-[4px] cursor-pointer ${
         disabled ? "opacity-40" : ""
       }`}
     >
       <div
-        className={`flex size-10 items-center justify-center rounded-[13px] ${
+        className={`flex size-[40px] items-center justify-center rounded-[10px] ${
           active ? "bg-[#4E5968]" : "bg-[rgba(2,32,71,0.05)]"
         }`}
       >
         {icon}
       </div>
-      <span className="text-[10px] font-bold text-[#6B7684] tracking-[-0.05px] leading-[12px]">
+      <span className="text-[10px] font-[700] text-[#6B7684] tracking-[-0.05px] leading-[12px]">
         {label}
       </span>
     </button>

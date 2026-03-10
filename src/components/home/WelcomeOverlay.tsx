@@ -15,10 +15,10 @@ function WelcomeOverlay({ userName, onDismiss }: WelcomeOverlayProps) {
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6">
         {/* 환영 텍스트 */}
         <div className="flex flex-col items-center gap-3 text-center welcome-text-up">
-          <p className="text-[16px] font-medium text-[#4ECDC4] tracking-[-0.08px] leading-[24px]">
+          <p className="text-[16px] font-[500] text-[#4ECDC4] tracking-[-0.08px] leading-[24px]">
             가입을 축하해요!
           </p>
-          <div className="text-[30px] font-bold text-black tracking-[-0.15px] leading-[40px]">
+          <div className="text-[30px] font-[700] text-black tracking-[-0.15px] leading-[40px]">
             <p>{userName}님,</p>
             <p>환영합니다!</p>
           </div>
@@ -33,9 +33,9 @@ function WelcomeOverlay({ userName, onDismiss }: WelcomeOverlayProps) {
         <button
           type="button"
           onClick={onDismiss}
-          className="flex h-14 w-full items-center justify-center rounded-2xl bg-[#252525] cursor-pointer"
+          className="flex h-[56px] w-full items-center justify-center rounded-[16px] bg-[#252525] cursor-pointer"
         >
-          <span className="text-[19px] font-bold text-white tracking-[-0.095px] leading-[28px]">
+          <span className="text-[19px] font-[700] text-white tracking-[-0.095px] leading-[28px]">
             시작하기
           </span>
         </button>
