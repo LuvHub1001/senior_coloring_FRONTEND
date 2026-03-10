@@ -7,7 +7,6 @@ export interface Theme {
   buttonTextColor: string;
   textColor: string;
   toggleType: "LIGHT" | "DARK";
-  frameImageUrl: string | null;
   unlocked: boolean;
   selected: boolean;
 }
