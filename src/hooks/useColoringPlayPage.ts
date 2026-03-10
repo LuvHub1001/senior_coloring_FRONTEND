@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useDesignDetail } from "@/hooks/useDesigns";
 import { useColoringCanvas } from "@/hooks/useColoringCanvas";
@@ -77,6 +77,19 @@ const useColoringPlayPage = () => {
   const [isToolBarCollapsed, setIsToolBarCollapsed] = useState(false);
   const [huePercent, setHuePercent] = useState(0);
   const [brightnessPercent, setBrightnessPercent] = useState(50);
+
+  // 모드 토글 (색칠 / 확대)
+  const [activeMode, setActiveMode] = useState<"color" | "zoom">("color");
+  const [isZoomToastVisible, setIsZoomToastVisible] = useState(false);
+  const [zoomPercent, setZoomPercent] = useState(100);
+  const zoomToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // 팬(드래그) 상태
+  const [panX, setPanX] = useState(0);
+  const [panY, setPanY] = useState(0);
+  const isPanningRef = useRef(false);
+  const panStartRef = useRef({ x: 0, y: 0 });
+  const panOffsetRef = useRef({ x: 0, y: 0 });
 
   const title = apiDesign?.title ?? locationState.title ?? "도안";
   // 저장된 이미지가 있으면 (이어 그리기) 그걸 우선 사용
@@ -210,6 +223,79 @@ const useColoringPlayPage = () => {
     setIsToolBarCollapsed((prev) => !prev);
   };
 
+  // 모드 전환 — 확대 모드 진입 시 토스트 3초 노출, 색칠 모드 복귀 시 줌/팬 초기화
+  const handleModeChange = useCallback((mode: "color" | "zoom") => {
+    setActiveMode(mode);
+
+    if (mode === "zoom") {
+      setIsZoomToastVisible(true);
+
+      if (zoomToastTimerRef.current) {
+        clearTimeout(zoomToastTimerRef.current);
+      }
+      zoomToastTimerRef.current = setTimeout(() => {
+        setIsZoomToastVisible(false);
+        zoomToastTimerRef.current = null;
+      }, 3000);
+    } else {
+      setIsZoomToastVisible(false);
+      if (zoomToastTimerRef.current) {
+        clearTimeout(zoomToastTimerRef.current);
+        zoomToastTimerRef.current = null;
+      }
+    }
+  }, []);
+
+  // 토스트 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (zoomToastTimerRef.current) {
+        clearTimeout(zoomToastTimerRef.current);
+      }
+    };
+  }, []);
+
+  const ZOOM_MIN = 50;
+  const ZOOM_MAX = 200;
+  const ZOOM_STEP = 25;
+
+  const handleZoomIn = useCallback(() => {
+    setZoomPercent((prev) => Math.min(prev + ZOOM_STEP, ZOOM_MAX));
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setZoomPercent((prev) => Math.max(prev - ZOOM_STEP, ZOOM_MIN));
+  }, []);
+
+  // 팬(드래그) 핸들러 — 확대 모드에서 도안 이동
+  const handlePanStart = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      isPanningRef.current = true;
+      panStartRef.current = { x: e.clientX, y: e.clientY };
+      panOffsetRef.current = { x: panX, y: panY };
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    },
+    [panX, panY],
+  );
+
+  const handlePanMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!isPanningRef.current) return;
+      const scale = zoomPercent / 100;
+      const dx = (e.clientX - panStartRef.current.x) / scale;
+      const dy = (e.clientY - panStartRef.current.y) / scale;
+      setPanX(panOffsetRef.current.x + dx);
+      setPanY(panOffsetRef.current.y + dy);
+    },
+    [zoomPercent],
+  );
+
+  const handlePanEnd = useCallback(() => {
+    isPanningRef.current = false;
+  }, []);
+
+  const zoomScale = zoomPercent / 100;
+
   return {
     isLoading,
     title,
@@ -243,6 +329,18 @@ const useColoringPlayPage = () => {
     handlePaletteApply,
     handlePaletteClose,
     isSaving,
+    activeMode,
+    handleModeChange,
+    isZoomToastVisible,
+    zoomPercent,
+    handleZoomIn,
+    handleZoomOut,
+    zoomScale,
+    panX,
+    panY,
+    handlePanStart,
+    handlePanMove,
+    handlePanEnd,
   };
 };
 

@@ -6,6 +6,9 @@ import {
   ColoringToolBar,
   PaletteBottomSheet,
   SaveConfirmModal,
+  ModeToggle,
+  ZoomToast,
+  ZoomControls,
 } from "@/components";
 import { useColoringPlayPage } from "@/hooks";
 
@@ -42,6 +45,18 @@ function ColoringPlayPage() {
     handleBrightnessChange,
     handlePaletteApply,
     handlePaletteClose,
+    activeMode,
+    handleModeChange,
+    isZoomToastVisible,
+    zoomPercent,
+    handleZoomIn,
+    handleZoomOut,
+    zoomScale,
+    panX,
+    panY,
+    handlePanStart,
+    handlePanMove,
+    handlePanEnd,
   } = useColoringPlayPage();
 
   return (
@@ -62,10 +77,37 @@ function ColoringPlayPage() {
       />
 
       {/* 캔버스 영역 */}
-      <ColoringCanvas
-        canvasRef={canvasRef}
-        onCanvasTap={handleCanvasTap}
-      />
+      <div className="relative flex flex-1 flex-col items-center bg-[#F9FAFB]">
+        {/* 토글 (top 20px) → 간격 56.5px → 캔버스 → 간격 38px → 토스트 */}
+        {!isLoading && (
+          <div className="mt-5">
+            <ModeToggle activeMode={activeMode} onModeChange={handleModeChange} />
+          </div>
+        )}
+        <div className="mt-[56.5px]">
+          <ColoringCanvas
+            canvasRef={canvasRef}
+            onCanvasTap={handleCanvasTap}
+            isZoomMode={activeMode === "zoom"}
+            zoomScale={zoomScale}
+            panX={panX}
+            panY={panY}
+            onPanStart={handlePanStart}
+            onPanMove={handlePanMove}
+            onPanEnd={handlePanEnd}
+          />
+        </div>
+        <ZoomToast isVisible={isZoomToastVisible} />
+
+        {/* 오버레이: 확대 모드 줌 컨트롤 */}
+        {activeMode === "zoom" && (
+          <ZoomControls
+            zoomPercent={zoomPercent}
+            onZoomIn={handleZoomIn}
+            onZoomOut={handleZoomOut}
+          />
+        )}
+      </div>
 
       {/* 팔레트 바텀시트 */}
       <PaletteBottomSheet

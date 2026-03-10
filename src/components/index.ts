@@ -30,6 +30,9 @@ import {
   ColoringToolBar,
   PaletteBottomSheet,
   SaveConfirmModal,
+  ModeToggle,
+  ZoomToast,
+  ZoomControls,
 } from "@/components/coloringPlay";
 import {
   Confetti,
@@ -65,6 +68,9 @@ export {
   ColoringToolBar,
   PaletteBottomSheet,
   SaveConfirmModal,
+  ModeToggle,
+  ZoomToast,
+  ZoomControls,
   Confetti,
   CompletionScreen,
   AchievementModal,
