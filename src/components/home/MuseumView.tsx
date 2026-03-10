@@ -7,6 +7,7 @@ interface ArtworkThumbnail {
 interface MuseumViewProps {
   userName: string;
   artworkCount: number;
+  reactionCount: number;
   themeImageUrl: string;
   featuredImageUrl: string;
   featuredArtworkId: string;
@@ -23,6 +24,7 @@ interface MuseumViewProps {
 function MuseumView({
   userName,
   artworkCount,
+  reactionCount,
   themeImageUrl,
   featuredImageUrl,
   featuredArtworkId,
@@ -43,26 +45,46 @@ function MuseumView({
       style={{ backgroundImage: `url(${themeImageUrl})` }}
     >
       {/* 타이틀 섹션 (NavBar 높이만큼 상단 여백) */}
-      <div className="flex flex-col items-center gap-2 px-6 pb-4 pt-25">
+      <div className="flex flex-col items-center gap-[8px] px-[24px] pb-[16px] pt-[108px]">
         <h1
-          className="text-center text-[26px] font-bold tracking-[-0.13px] leading-[35px]"
+          className="text-center text-[26px] font-[700] tracking-[-0.13px] leading-[35px]"
           style={{ color: textColor }}
         >
           {userName}님의 미술관
         </h1>
-        <div className="flex items-center gap-1">
-          <span
-            className="text-[15px] font-medium tracking-[-0.075px] leading-[22.5px]"
-            style={{ color: textColor }}
-          >
-            작품수
-          </span>
-          <span
-            className="text-[15px] font-bold tracking-[-0.075px] leading-[22.5px]"
-            style={{ color: textColor }}
-          >
-            {artworkCount}
-          </span>
+        <div className="flex items-center gap-[16px]">
+          <div className="flex items-center gap-[4px]">
+            <span
+              className="text-[15px] font-[500] tracking-[-0.075px] leading-[22.5px]"
+              style={{ color: textColor }}
+            >
+              작품수
+            </span>
+            <span
+              className="text-[15px] font-[700] tracking-[-0.075px] leading-[22.5px]"
+              style={{ color: textColor }}
+            >
+              {artworkCount}
+            </span>
+          </div>
+          <div
+            className="h-[12px] w-px"
+            style={{ backgroundColor: `${textColor}77` }}
+          />
+          <div className="flex items-center gap-[4px]">
+            <span
+              className="text-[15px] font-[500] tracking-[-0.075px] leading-[22.5px]"
+              style={{ color: textColor }}
+            >
+              반응
+            </span>
+            <span
+              className="text-[15px] font-[700] tracking-[-0.075px] leading-[22.5px]"
+              style={{ color: textColor }}
+            >
+              {reactionCount}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -93,14 +115,18 @@ function MuseumView({
 
       {/* 작품 썸네일 목록 */}
       {artworks.length > 0 && (
-        <div className="overflow-x-auto scrollbar-hide p-5">
-          <div className="flex gap-4 justify-center">
+        <div className="overflow-x-auto scrollbar-hide p-[20px]">
+          <div className="flex gap-[16px]">
             {artworks.map((artwork) => (
               <button
                 key={artwork.id}
                 type="button"
                 onClick={() => onFeatureArtwork(artwork.id)}
-                className="size-[68px] shrink-0 rounded-[13.161px] cursor-pointer"
+                className={`size-[68px] shrink-0 rounded-[13.161px] cursor-pointer ${
+                  artwork.id === featuredArtworkId
+                    ? "border-[2px] border-white"
+                    : ""
+                }`}
               >
                 <img
                   src={artwork.imageUrl ?? ""}
@@ -115,16 +141,16 @@ function MuseumView({
 
       {/* 하단 버튼 */}
       <div className="w-full shrink-0">
-        <div className="h-9" />
-        <div className="px-5">
+        <div className="h-[36px]" />
+        <div className="px-[20px]">
           <button
             type="button"
             onClick={onCreateArtwork}
-            className="flex h-14 w-full items-center justify-center rounded-2xl cursor-pointer"
+            className="flex h-[56px] w-full items-center justify-center rounded-[16px] cursor-pointer"
             style={{ backgroundColor: buttonColor }}
           >
             <span
-              className="text-[19px] font-bold tracking-[-0.095px] leading-[28px]"
+              className="text-[19px] font-[700] tracking-[-0.095px] leading-[28px]"
               style={{ color: buttonTextColor }}
             >
               작품 만들기

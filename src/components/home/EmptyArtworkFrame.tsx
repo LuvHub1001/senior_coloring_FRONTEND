@@ -46,7 +46,7 @@ function EmptyArtworkFrame({ frameImageUrl, onClick }: EmptyArtworkFrameProps) {
               />
             </svg>
           </div>
-          <p className="text-[19px] font-medium text-[#4E5968] tracking-[-0.095px] leading-[28px] text-center whitespace-nowrap">
+          <p className="text-[19px] font-[500] text-[#4E5968] tracking-[-0.095px] leading-[28px] text-center whitespace-nowrap">
             이 액자에
             <br />
             첫 그림을 담아보세요

@@ -71,6 +71,7 @@ function HomePage() {
           <MuseumView
             userName={userName}
             artworkCount={completedArtworks.length}
+            reactionCount={0}
             themeImageUrl={selectedThemeImageUrl}
             featuredImageUrl={featuredArtwork?.imageUrl ?? ""}
             featuredArtworkId={featuredArtwork?.id ?? ""}

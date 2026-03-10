@@ -31,11 +31,11 @@ function ArtworkDetailOverlay({
       {/* 콘텐츠 */}
       <div className="absolute inset-x-0 top-0 flex flex-col items-center">
         {/* 상단 버튼 */}
-        <div className="flex w-full items-center justify-end gap-2 px-5 pt-5 pb-4">
+        <div className="flex w-full items-center justify-end gap-[8px] px-[20px] pt-[20px] pb-[16px]">
           <button
             type="button"
             onClick={onMenuToggle}
-            className="flex size-12 items-center justify-center rounded-full bg-white/10 cursor-pointer"
+            className="flex size-[48px] items-center justify-center rounded-full bg-white/10 cursor-pointer"
           >
             <svg
               width="24"
@@ -52,7 +52,7 @@ function ArtworkDetailOverlay({
           <button
             type="button"
             onClick={onClose}
-            className="flex size-12 items-center justify-center rounded-full bg-white/10 cursor-pointer"
+            className="flex size-[48px] items-center justify-center rounded-full bg-white/10 cursor-pointer"
           >
             <svg
               width="24"
@@ -72,12 +72,12 @@ function ArtworkDetailOverlay({
         </div>
 
         {/* 작품 정보 */}
-        <div className="flex w-full flex-col gap-1.5 px-5 pb-4">
-          <h2 className="text-[26px] font-bold leading-[35px] tracking-[-0.13px] text-white">
+        <div className="flex w-full flex-col gap-[6px] px-[20px] pb-[16px]">
+          <h2 className="text-[26px] font-[700] leading-[35px] tracking-[-0.13px] text-white">
             {title}
           </h2>
-          <div className="flex items-center gap-1">
-            <span className="text-[15px] font-medium leading-[22.5px] tracking-[-0.075px] text-white">
+          <div className="flex items-center gap-[4px]">
+            <span className="text-[15px] font-[500] leading-[22.5px] tracking-[-0.075px] text-white">
               {dateLabel}
             </span>
             <span className="size-[2px] rounded-full bg-white" />
@@ -93,7 +93,7 @@ function ArtworkDetailOverlay({
                 fill="white"
               />
             </svg>
-            <span className="text-[13px] font-medium leading-[19.5px] tracking-[-0.065px] text-white">
+            <span className="text-[13px] font-[500] leading-[19.5px] tracking-[-0.065px] text-white">
               {reactionCount}개
             </span>
           </div>
@@ -115,7 +115,7 @@ function ArtworkDetailOverlay({
           <button
             type="button"
             onClick={onEdit}
-            className="flex h-12 w-full items-center gap-2 px-4 cursor-pointer"
+            className="flex h-[48px] w-full items-center gap-[8px] px-[16px] cursor-pointer"
           >
             <svg
               width="16"
@@ -132,14 +132,14 @@ function ArtworkDetailOverlay({
                 strokeLinejoin="round"
               />
             </svg>
-            <span className="text-[15px] font-medium leading-[22.5px] tracking-[-0.075px] text-[#191f28]">
+            <span className="text-[15px] font-[500] leading-[22.5px] tracking-[-0.075px] text-[#191f28]">
               수정하기
             </span>
           </button>
           <button
             type="button"
             onClick={onShare}
-            className="flex h-12 w-full items-center gap-2 px-4 cursor-pointer"
+            className="flex h-[48px] w-full items-center gap-[8px] px-[16px] cursor-pointer"
           >
             <svg
               width="16"
@@ -157,14 +157,14 @@ function ArtworkDetailOverlay({
                 strokeWidth="1.33"
               />
             </svg>
-            <span className="text-[15px] font-medium leading-[22.5px] tracking-[-0.075px] text-[#191f28]">
+            <span className="text-[15px] font-[500] leading-[22.5px] tracking-[-0.075px] text-[#191f28]">
               공유하기
             </span>
           </button>
           <button
             type="button"
             onClick={onDelete}
-            className="flex h-12 w-full items-center gap-2 px-4 cursor-pointer"
+            className="flex h-[48px] w-full items-center gap-[8px] px-[16px] cursor-pointer"
           >
             <svg
               width="16"
@@ -181,7 +181,7 @@ function ArtworkDetailOverlay({
                 strokeLinejoin="round"
               />
             </svg>
-            <span className="text-[15px] font-medium leading-[22.5px] tracking-[-0.075px] text-[#191f28]">
+            <span className="text-[15px] font-[500] leading-[22.5px] tracking-[-0.075px] text-[#191f28]">
               삭제하기
             </span>
           </button>

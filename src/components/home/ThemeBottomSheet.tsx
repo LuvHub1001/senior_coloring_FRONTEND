@@ -65,7 +65,7 @@ function ThemeBottomSheet({
 
         {/* 타이틀 */}
         <div className="px-5 pb-6">
-          <h2 className="text-[24px] font-bold text-[#191F28] tracking-[-0.12px] leading-[33px]">
+          <h2 className="text-[24px] font-[700] text-[#191F28] tracking-[-0.12px] leading-[33px]">
             전시관 테마 선택
           </h2>
         </div>
@@ -113,7 +113,7 @@ function ThemeBottomSheet({
                       strokeLinecap="round"
                     />
                   </svg>
-                  <span className="text-[17px] font-medium text-[#4E5968] tracking-[-0.085px] leading-[25.5px]">
+                  <span className="text-[17px] font-[500] text-[#4E5968] tracking-[-0.085px] leading-[25.5px]">
                     잠금
                   </span>
                 </div>

@@ -28,10 +28,10 @@ function ThemeItem({
 
           {/* 테마 정보 */}
           <div className="flex flex-col gap-1">
-            <span className="text-[20px] font-bold text-[#8B95A1] tracking-[-0.1px] leading-[29px]">
+            <span className="text-[20px] font-[700] text-[#8B95A1] tracking-[-0.1px] leading-[29px]">
               {name}
             </span>
-            <span className="text-[17px] font-medium text-[#8B95A1] tracking-[-0.085px] leading-[25.5px]">
+            <span className="text-[17px] font-[500] text-[#8B95A1] tracking-[-0.085px] leading-[25.5px]">
               {description}
             </span>
           </div>
@@ -60,10 +60,10 @@ function ThemeItem({
 
         {/* 테마 정보 */}
         <div className="flex flex-col gap-1">
-          <span className="text-[20px] font-bold text-[#191F28] tracking-[-0.1px] leading-[29px]">
+          <span className="text-[20px] font-[700] text-[#191F28] tracking-[-0.1px] leading-[29px]">
             {name}
           </span>
-          <span className="text-[17px] font-medium text-[#191F28] tracking-[-0.085px] leading-[25.5px]">
+          <span className="text-[17px] font-[500] text-[#191F28] tracking-[-0.085px] leading-[25.5px]">
             {description}
           </span>
         </div>
