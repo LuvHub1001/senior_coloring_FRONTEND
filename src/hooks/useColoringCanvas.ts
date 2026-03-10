@@ -12,55 +12,7 @@ const hexToRgba = (hex: string): { r: number; g: number; b: number; a: number } 
 const getLuminance = (r: number, g: number, b: number): number =>
   0.299 * r + 0.587 * g + 0.114 * b;
 
-// 경계 맵 사전 계산 — 휘도 기반 선 감지 + 안티앨리어싱 팽창
-const buildBoundaryMap = (
-  data: Uint8ClampedArray,
-  width: number,
-  height: number,
-  lineThreshold: number,
-  antiAliasThreshold: number,
-): Uint8Array => {
-  const totalPixels = width * height;
-  const boundary = new Uint8Array(totalPixels);
-
-  // 1단계: 휘도 기반으로 어두운 선 픽셀 탐지
-  for (let i = 0; i < totalPixels; i++) {
-    const idx = i * 4;
-    const lum = getLuminance(data[idx], data[idx + 1], data[idx + 2]);
-    if (lum < lineThreshold) {
-      boundary[i] = 1;
-    }
-  }
-
-  // 2단계: 안티앨리어싱 팽창 — 선에 인접한 반투명 픽셀도 경계로 포함
-  const dilated = new Uint8Array(boundary);
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const pi = y * width + x;
-      if (boundary[pi]) continue; // 이미 경계
-
-      // 4방향 이웃 중 경계 픽셀이 있는지 확인
-      const hasNeighborBoundary =
-        (x > 0 && boundary[pi - 1]) ||
-        (x < width - 1 && boundary[pi + 1]) ||
-        (y > 0 && boundary[pi - width]) ||
-        (y < height - 1 && boundary[pi + width]);
-
-      if (hasNeighborBoundary) {
-        const idx = pi * 4;
-        const lum = getLuminance(data[idx], data[idx + 1], data[idx + 2]);
-        // 선 주변의 중간 밝기 픽셀(안티앨리어싱)도 경계로 처리
-        if (lum < antiAliasThreshold) {
-          dilated[pi] = 1;
-        }
-      }
-    }
-  }
-
-  return dilated;
-};
-
-// 스캔라인 플러드 필 — 사전 계산된 경계 맵 + 색상 매칭
+// 스캔라인 플러드 필 — 경계 감지 + 색상 매칭 + 갭 채우기 후처리
 const floodFill = (
   imageData: ImageData,
   startX: number,
@@ -68,9 +20,9 @@ const floodFill = (
   fillColor: { r: number; g: number; b: number; a: number },
   tolerance: number,
   lineThreshold: number,
-  antiAliasThreshold: number,
 ): boolean => {
   const { data, width, height } = imageData;
+  const totalPixels = width * height;
   const startIdx = (startY * width + startX) * 4;
   const startR = data[startIdx];
   const startG = data[startIdx + 1];
@@ -93,13 +45,41 @@ const floodFill = (
     return false;
   }
 
-  // 경계 맵 사전 계산 (안티앨리어싱 포함)
-  const boundaryMap = buildBoundaryMap(data, width, height, lineThreshold, antiAliasThreshold);
+  // 경계 맵 사전 계산 — 휘도 기반 선 감지
+  const hardBoundary = new Uint8Array(totalPixels);
+  for (let i = 0; i < totalPixels; i++) {
+    const idx = i * 4;
+    const lum = getLuminance(data[idx], data[idx + 1], data[idx + 2]);
+    if (lum < lineThreshold) {
+      hardBoundary[i] = 1;
+    }
+  }
 
-  const visited = new Uint8Array(width * height);
+  // 경계 맵 보강: 1px 틈새 닫기 (수평/수직 방향 경계 사이 빈 픽셀 메우기)
+  // 얇은 선의 미세한 끊김으로 인한 색 번짐 방지
+  const closedBoundary = new Uint8Array(hardBoundary);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const pi = y * width + x;
+      if (closedBoundary[pi]) continue;
+
+      // 수평 방향: 좌우 모두 경계이면 사이 픽셀도 경계로 처리
+      const closedH =
+        x > 0 && x < width - 1 && hardBoundary[pi - 1] && hardBoundary[pi + 1];
+      // 수직 방향: 상하 모두 경계이면 사이 픽셀도 경계로 처리
+      const closedV =
+        y > 0 && y < height - 1 && hardBoundary[pi - width] && hardBoundary[pi + width];
+
+      if (closedH || closedV) {
+        closedBoundary[pi] = 1;
+      }
+    }
+  }
+
+  const visited = new Uint8Array(totalPixels);
 
   const canFill = (pixelIdx: number): boolean => {
-    if (visited[pixelIdx] || boundaryMap[pixelIdx]) return false;
+    if (visited[pixelIdx] || closedBoundary[pixelIdx]) return false;
     const idx = pixelIdx * 4;
     // 시작 픽셀과 색상 유사성 확인
     return (
@@ -167,10 +147,76 @@ const floodFill = (
     }
   }
 
+  // 후처리 1단계: 채워진 영역을 경계선까지 8방향 팽창하여 안티앨리어싱 갭 제거
+  const GAP_FILL_ITERATIONS = 6;
+  for (let iter = 0; iter < GAP_FILL_ITERATIONS; iter++) {
+    let changed = false;
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const pi = y * width + x;
+        if (visited[pi] || hardBoundary[pi]) continue;
+
+        // 8방향 이웃 중 채워진 픽셀이 있는지 확인 (대각선 포함)
+        const hasFilledNeighbor =
+          (x > 0 && visited[pi - 1]) ||
+          (x < width - 1 && visited[pi + 1]) ||
+          (y > 0 && visited[pi - width]) ||
+          (y < height - 1 && visited[pi + width]) ||
+          (x > 0 && y > 0 && visited[pi - width - 1]) ||
+          (x < width - 1 && y > 0 && visited[pi - width + 1]) ||
+          (x > 0 && y < height - 1 && visited[pi + width - 1]) ||
+          (x < width - 1 && y < height - 1 && visited[pi + width + 1]);
+
+        if (hasFilledNeighbor) {
+          fillPixel(pi);
+          changed = true;
+        }
+      }
+    }
+
+    if (!changed) break;
+  }
+
+  // 후처리 2단계: 경계선 인접 안티앨리어싱 픽셀에 알파 블렌딩 적용 (8방향 탐색)
+  // 채워진 영역과 윤곽선 사이의 전환을 자연스럽게 처리
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const pi = y * width + x;
+      if (visited[pi]) continue;
+      if (!hardBoundary[pi]) continue;
+
+      // 경계 픽셀 중 채워진 8방향 이웃이 있는 픽셀만 블렌딩 대상
+      const hasFilledNeighbor =
+        (x > 0 && visited[pi - 1]) ||
+        (x < width - 1 && visited[pi + 1]) ||
+        (y > 0 && visited[pi - width]) ||
+        (y < height - 1 && visited[pi + width]) ||
+        (x > 0 && y > 0 && visited[pi - width - 1]) ||
+        (x < width - 1 && y > 0 && visited[pi - width + 1]) ||
+        (x > 0 && y < height - 1 && visited[pi + width - 1]) ||
+        (x < width - 1 && y < height - 1 && visited[pi + width + 1]);
+
+      if (!hasFilledNeighbor) continue;
+
+      const idx = pi * 4;
+      const lum = getLuminance(data[idx], data[idx + 1], data[idx + 2]);
+
+      // 완전히 어두운 선(lum < 40)은 블렌딩하지 않고 보존
+      if (lum < 40) continue;
+
+      // 휘도에 비례하여 채색 비율 결정 (밝을수록 채색 비율 높음)
+      const blendRatio = Math.min((lum - 40) / (lineThreshold - 40), 1);
+      data[idx] = Math.round(data[idx] * (1 - blendRatio) + fillColor.r * blendRatio);
+      data[idx + 1] = Math.round(data[idx + 1] * (1 - blendRatio) + fillColor.g * blendRatio);
+      data[idx + 2] = Math.round(data[idx + 2] * (1 - blendRatio) + fillColor.b * blendRatio);
+    }
+  }
+
   return true;
 };
 
-const FLOOD_FILL_TOLERANCE = 20;
+const FLOOD_FILL_TOLERANCE = 55;
 const LINE_BOUNDARY_THRESHOLD = 110;
 const ANTI_ALIAS_THRESHOLD = 180;
 const MAX_HISTORY = 50;
@@ -248,7 +294,7 @@ const useColoringCanvas = (imageUrl: string, selectedColor: string) => {
 
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const fillColor = hexToRgba(selectedColor);
-      const filled = floodFill(imageData, x, y, fillColor, FLOOD_FILL_TOLERANCE, LINE_BOUNDARY_THRESHOLD, ANTI_ALIAS_THRESHOLD);
+      const filled = floodFill(imageData, x, y, fillColor, FLOOD_FILL_TOLERANCE, LINE_BOUNDARY_THRESHOLD);
 
       if (filled) {
         ctx.putImageData(imageData, 0, 0);
@@ -301,7 +347,7 @@ const useColoringCanvas = (imageUrl: string, selectedColor: string) => {
     setHistoryVersion((v) => v + 1);
   }, []);
 
-  // 색칠 진행률 계산 (흰색/검정 제외 픽셀 비율)
+  // 색칠 진행률 계산 (색칠 가능 영역 대비 색칠된 비율)
   const getProgress = useCallback((): number => {
     const canvas = canvasRef.current;
     if (!canvas) return 0;
@@ -311,6 +357,7 @@ const useColoringCanvas = (imageUrl: string, selectedColor: string) => {
 
     const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const total = width * height;
+    let fillable = 0;
     let colored = 0;
 
     for (let i = 0; i < total; i++) {
@@ -318,17 +365,22 @@ const useColoringCanvas = (imageUrl: string, selectedColor: string) => {
       const r = data[idx];
       const g = data[idx + 1];
       const b = data[idx + 2];
+      const lum = getLuminance(r, g, b);
 
-      // 흰색 계열(배경)과 검정 계열(윤곽선) 제외
+      // 윤곽선(어두운 픽셀)과 안티앨리어싱 회색 영역은 집계에서 제외
+      if (lum < ANTI_ALIAS_THRESHOLD) continue;
+
+      fillable++;
+
+      // 흰색 계열이 아닌 픽셀 = 색칠된 픽셀
       const isWhite = r > 230 && g > 230 && b > 230;
-      const isBlack = r < 40 && g < 40 && b < 40;
-
-      if (!isWhite && !isBlack) {
+      if (!isWhite) {
         colored++;
       }
     }
 
-    return Math.min(Math.round((colored / total) * 100), 100);
+    if (fillable === 0) return 0;
+    return Math.min(Math.round((colored / fillable) * 100), 100);
   }, []);
 
   // 현재 캔버스를 이미지 데이터 URL로 내보내기 (완성 화면용)
