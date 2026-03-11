@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { completeArtwork, deleteArtwork, featureArtwork } from "@/apis/ArtworkFetcher";
+import { useShare } from "@/hooks/useShare";
+import goldFrame from "@images/home/gold_frame.svg";
 import type { UnlockedTheme } from "@/types";
 
 interface CompletionLocationState {
@@ -24,6 +26,8 @@ const useCompletionPage = () => {
   const originalArtworkId = locationState.originalArtworkId;
   const isOriginalFeatured = locationState.isOriginalFeatured ?? false;
 
+  const { handleShare: shareImage, isShareToastVisible, shareToastMessage } = useShare();
+
   const [unlockedTheme, setUnlockedTheme] = useState<UnlockedTheme | null>(null);
   const [isAchievementOpen, setIsAchievementOpen] = useState(false);
   // 완성 후 홈 이동 대기 여부 (모달 닫은 뒤 이동하기 위함)
@@ -43,6 +47,7 @@ const useCompletionPage = () => {
 
       queryClient.invalidateQueries({ queryKey: ["artworks"] });
       queryClient.invalidateQueries({ queryKey: ["themes"] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
 
       // 새로 해금된 테마가 있으면 모달 표시
       if (response.data.unlockedTheme) {
@@ -65,7 +70,7 @@ const useCompletionPage = () => {
     navigate("/home", { replace: true });
   };
 
-  // 그만하기 (완성 처리 후 홈으로)
+  // 그만하기 (완성 처리 후 도안 리스트로)
   const handleDismiss = async () => {
     if (artworkId) {
       const result = await completeMutation.mutateAsync(artworkId);
@@ -74,7 +79,7 @@ const useCompletionPage = () => {
         return;
       }
     }
-    navigate("/home", { replace: true });
+    navigate("/coloring", { replace: true });
   };
 
   // 해금 모달 닫기
@@ -87,18 +92,7 @@ const useCompletionPage = () => {
 
   // 공유하기
   const handleShare = async () => {
-    if (!completedImageUrl) return;
-
-    // Web Share API 지원 시
-    if (navigator.share) {
-      const blob = await fetch(completedImageUrl).then((r) => r.blob());
-      const file = new File([blob], `${title}.png`, { type: "image/png" });
-
-      await navigator.share({
-        title: `${title} - 색칠 완성`,
-        files: [file],
-      });
-    }
+    await shareImage(completedImageUrl, goldFrame);
   };
 
   return {
@@ -111,6 +105,8 @@ const useCompletionPage = () => {
     handleDismiss,
     handleShare,
     handleAchievementClose,
+    isShareToastVisible,
+    shareToastMessage,
   };
 };
 

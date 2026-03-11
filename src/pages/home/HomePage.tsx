@@ -8,6 +8,7 @@ import {
   MuseumView,
   ArtworkDetailOverlay,
   DeleteConfirmModal,
+  ShareToast,
 } from "@/components";
 import { useHomePage, useArtworkDetail } from "@/hooks";
 
@@ -50,7 +51,9 @@ function HomePage() {
     handleDeleteClick,
     handleDeleteConfirm,
     handleDeleteCancel,
-  } = useArtworkDetail();
+    isShareToastVisible,
+    shareToastMessage,
+  } = useArtworkDetail(frameImageUrl);
 
   if (showWelcome) {
     return (
@@ -161,6 +164,8 @@ function HomePage() {
           onConfirm={handleDeleteConfirm}
         />
       )}
+
+      <ShareToast isVisible={isShareToastVisible} message={shareToastMessage} />
     </>
   );
 }

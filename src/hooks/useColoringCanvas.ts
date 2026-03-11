@@ -236,7 +236,15 @@ const LINE_BOUNDARY_THRESHOLD = 180;
 
 const MAX_HISTORY = 50;
 
-const useColoringCanvas = (imageUrl: string, selectedColor: string) => {
+// 캔버스 디스플레이 너비 (CSS w-[335px])
+const CANVAS_DISPLAY_WIDTH = 335;
+
+const useColoringCanvas = (
+  imageUrl: string,
+  selectedColor: string,
+  rotationRef?: React.RefObject<number>,
+  zoomScaleRef?: React.RefObject<number>,
+) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const historyRef = useRef<ImageData[]>([]);
   const historyIndexRef = useRef(-1);
@@ -300,10 +308,42 @@ const useColoringCanvas = (imageUrl: string, selectedColor: string) => {
       if (!ctx) return;
 
       const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      const x = Math.floor((e.clientX - rect.left) * scaleX);
-      const y = Math.floor((e.clientY - rect.top) * scaleY);
+      const currentRotation = rotationRef?.current ?? 0;
+      const currentScale = zoomScaleRef?.current ?? 1;
+
+      let x: number;
+      let y: number;
+
+      if (currentRotation === 0 && currentScale === 1) {
+        // 변환 없음 — 기존 방식
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        x = Math.floor((e.clientX - rect.left) * scaleX);
+        y = Math.floor((e.clientY - rect.top) * scaleY);
+      } else {
+        // 회전/확대 적용 — 역변환으로 캔버스 좌표 계산
+        const displayW = CANVAS_DISPLAY_WIDTH;
+        const displayH = canvas.height * (displayW / canvas.width);
+
+        // AABB 중심 = 캔버스 시각적 중심
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+
+        // 클릭 위치를 중심 기준으로 변환
+        const dx = e.clientX - cx;
+        const dy = e.clientY - cy;
+
+        // 역 회전
+        const rad = -currentRotation * (Math.PI / 180);
+        const rx = dx * Math.cos(rad) - dy * Math.sin(rad);
+        const ry = dx * Math.sin(rad) + dy * Math.cos(rad);
+
+        // 역 스케일 → 캔버스 픽셀 좌표로 변환
+        const ux = rx / currentScale;
+        const uy = ry / currentScale;
+        x = Math.floor((ux / displayW + 0.5) * canvas.width);
+        y = Math.floor((uy / displayH + 0.5) * canvas.height);
+      }
 
       if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) return;
 

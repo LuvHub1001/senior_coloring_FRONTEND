@@ -1,4 +1,4 @@
-import { CompletionScreen, AchievementModal } from "@/components";
+import { CompletionScreen, AchievementModal, ShareToast } from "@/components";
 import { useCompletionPage } from "@/hooks";
 import frameImage from "@images/home/gold_frame.svg";
 
@@ -11,6 +11,8 @@ function CompletionPage() {
     handleSaveToMuseum,
     handleShare,
     handleAchievementClose,
+    isShareToastVisible,
+    shareToastMessage,
   } = useCompletionPage();
 
   return (
@@ -22,6 +24,8 @@ function CompletionPage() {
         onSaveToMuseum={handleSaveToMuseum}
         onShare={handleShare}
       />
+
+      <ShareToast isVisible={isShareToastVisible} message={shareToastMessage} />
 
       {unlockedTheme && (
         <AchievementModal

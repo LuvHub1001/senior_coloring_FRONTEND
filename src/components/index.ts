@@ -1,4 +1,4 @@
-import { ScrollToTop } from "@/components/common";
+import { ScrollToTop, ShareToast } from "@/components/common";
 import { LoginLanding } from "@/components/login";
 import {
   HomeNavBar,
@@ -74,4 +74,5 @@ export {
   Confetti,
   CompletionScreen,
   AchievementModal,
+  ShareToast,
 };

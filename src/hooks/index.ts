@@ -13,6 +13,7 @@ import { useArtworkSave } from "@/hooks/useArtworkSave";
 import { useCompletionPage } from "@/hooks/useCompletionPage";
 import { useLogout } from "@/hooks/useLogout";
 import { useArtworkDetail } from "@/hooks/useArtworkDetail";
+import { useShare } from "@/hooks/useShare";
 
 export {
   useImageCarousel,
@@ -32,4 +33,5 @@ export {
   useCompletionPage,
   useLogout,
   useArtworkDetail,
+  useShare,
 };

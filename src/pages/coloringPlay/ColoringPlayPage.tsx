@@ -52,9 +52,12 @@ function ColoringPlayPage() {
     handleZoomIn,
     handleZoomOut,
     zoomContainerStyle,
-    handlePanStart,
-    handlePanMove,
-    handlePanEnd,
+    handleDragStart,
+    handleDragMove,
+    handleDragEnd,
+    handlePinchStart,
+    handlePinchMove,
+    handlePinchEnd,
   } = useColoringPlayPage();
 
   return (
@@ -85,10 +88,13 @@ function ColoringPlayPage() {
         <div
           className="mt-5"
           style={zoomContainerStyle}
-          onPointerDown={activeMode === "zoom" ? handlePanStart : undefined}
-          onPointerMove={activeMode === "zoom" ? handlePanMove : undefined}
-          onPointerUp={activeMode === "zoom" ? handlePanEnd : undefined}
-          onPointerLeave={activeMode === "zoom" ? handlePanEnd : undefined}
+          onPointerDown={activeMode === "zoom" ? handleDragStart : undefined}
+          onPointerMove={activeMode === "zoom" ? handleDragMove : undefined}
+          onPointerUp={activeMode === "zoom" ? handleDragEnd : undefined}
+          onPointerLeave={activeMode === "zoom" ? handleDragEnd : undefined}
+          onTouchStart={activeMode === "zoom" ? handlePinchStart : undefined}
+          onTouchMove={activeMode === "zoom" ? handlePinchMove : undefined}
+          onTouchEnd={activeMode === "zoom" ? handlePinchEnd : undefined}
         >
           <ColoringCanvas
             canvasRef={canvasRef}
