@@ -62,6 +62,8 @@ interface LocationState {
   title?: string;
   artworkId?: string;
   savedImageUrl?: string;
+  originalArtworkId?: string;
+  isOriginalFeatured?: boolean;
 }
 
 const useColoringPlayPage = () => {
@@ -183,7 +185,13 @@ const useColoringPlayPage = () => {
     }
     const completedImageUrl = getCanvasDataUrl();
     navigate(`/coloring/${id}/complete`, {
-      state: { completedImageUrl, title, artworkId },
+      state: {
+        completedImageUrl,
+        title,
+        artworkId,
+        originalArtworkId: locationState.originalArtworkId,
+        isOriginalFeatured: locationState.isOriginalFeatured,
+      },
     });
   };
 
