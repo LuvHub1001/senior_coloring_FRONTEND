@@ -3,15 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteArtwork } from "@/apis/ArtworkFetcher";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useShare } from "@/hooks/useShare";
 import type { Artwork } from "@/types";
 
-const useArtworkDetail = () => {
+const useArtworkDetail = (frameImageUrl?: string) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { userProfile } = useUserProfile();
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const { handleShare: shareImage, isShareToastVisible, shareToastMessage } = useShare();
 
   const deleteMutation = useMutation({
     mutationFn: (artworkId: string) => deleteArtwork(artworkId),
@@ -58,10 +60,10 @@ const useArtworkDetail = () => {
     });
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     if (!selectedArtwork) return;
-    // TODO: 공유 기능 구현
     setIsMenuOpen(false);
+    await shareImage(selectedArtwork.imageUrl, frameImageUrl ?? "");
   };
 
   // 삭제 메뉴 클릭 → 확인 모달 열기
@@ -109,6 +111,8 @@ const useArtworkDetail = () => {
     handleDeleteClick,
     handleDeleteConfirm,
     handleDeleteCancel,
+    isShareToastVisible,
+    shareToastMessage,
   };
 };
 

@@ -122,16 +122,18 @@ function MuseumView({
                 key={artwork.id}
                 type="button"
                 onClick={() => onFeatureArtwork(artwork.id)}
-                className={`size-[68px] shrink-0 rounded-[13.161px] cursor-pointer ${
-                  artwork.id === featuredArtworkId
-                    ? "border-[2px] border-white"
-                    : ""
-                }`}
+                className="shrink-0 rounded-[13.161px] cursor-pointer border-[2px] border-solid"
+                style={{
+                  borderColor:
+                    artwork.id === featuredArtworkId
+                      ? textColor
+                      : "transparent",
+                }}
               >
                 <img
                   src={artwork.imageUrl ?? ""}
                   alt="작품 썸네일"
-                  className="m-[4px] size-[60px] object-cover rounded-[8px]"
+                  className="m-[4.25px] size-[60px] object-cover rounded-[8px]"
                 />
               </button>
             ))}

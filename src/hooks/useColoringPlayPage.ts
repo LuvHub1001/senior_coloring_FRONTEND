@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useDesignDetail } from "@/hooks/useDesigns";
 import { useColoringCanvas } from "@/hooks/useColoringCanvas";
-import { useColoringSvg } from "@/hooks/useColoringSvg";
 import { useArtworkSave } from "@/hooks/useArtworkSave";
 
 // HSL → HEX 변환
@@ -87,44 +86,39 @@ const useColoringPlayPage = () => {
   const [zoomPercent, setZoomPercent] = useState(100);
   const zoomToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 팬(드래그) 상태
-  const [panX, setPanX] = useState(0);
-  const [panY, setPanY] = useState(0);
-  const isPanningRef = useRef(false);
-  const panStartRef = useRef({ x: 0, y: 0 });
-  const panOffsetRef = useRef({ x: 0, y: 0 });
+  // 회전(드래그) 상태
+  const [rotation, setRotation] = useState(0);
+  const isDraggingRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const rotationStartRef = useRef(0);
+
+  // 핀치 줌 상태
+  const isPinchingRef = useRef(false);
+  const pinchStartDistRef = useRef(0);
+  const zoomStartRef = useRef(100);
+
+  // useColoringCanvas에 전달할 ref (회전/스케일 역변환용)
+  const rotationRef = useRef(0);
+  const zoomScaleRef = useRef(1);
 
   const title = apiDesign?.title ?? locationState.title ?? "도안";
   // 저장된 이미지가 있으면 (이어 그리기) 그걸 우선 사용
   const imageUrl = locationState.savedImageUrl ?? apiDesign?.imageUrl ?? locationState.imageUrl ?? "";
   const isLoading = !minLoadingDone || isApiLoading;
 
-  // SVG URL 감지 (.svg 확장자 여부)
-  const isSvgMode = /\.svg(\?|$)/i.test(imageUrl);
-
-  // SVG 패스 기반 색칠 (SVG일 때만 활성)
-  const svgResult = useColoringSvg(isSvgMode ? imageUrl : "", selectedColor);
-
-  // 캔버스 플러드 필 색칠 (비-SVG일 때만 활성)
-  const canvasResult = useColoringCanvas(isSvgMode ? "" : imageUrl, selectedColor);
-
-  // 모드에 따라 통합 인터페이스 선택
+  // 모든 이미지(SVG 포함)를 캔버스 래스터화 후 flood fill로 색칠
   const {
+    canvasRef,
     canUndo,
     canRedo,
     hasColoredAnything,
+    handleCanvasTap,
     handleUndo,
     handleRedo,
     getCanvasDataUrl,
     getCanvasFile,
     getProgress,
-  } = isSvgMode ? svgResult : canvasResult;
-
-  // 모드별 전용 ref / 핸들러
-  const canvasRef = canvasResult.canvasRef;
-  const handleCanvasTap = canvasResult.handleCanvasTap;
-  const svgContainerRef = svgResult.containerRef;
-  const handleSvgClick = svgResult.handleSvgClick;
+  } = useColoringCanvas(imageUrl, selectedColor, rotationRef, zoomScaleRef);
 
   // 작품 생성 및 임시 저장 (이어 그리기 시 기존 artworkId 전달)
   const {
@@ -135,8 +129,9 @@ const useColoringPlayPage = () => {
   } = useArtworkSave(id ?? "", locationState.artworkId);
 
   // 이어 그리기(savedImageUrl 존재)면 이미 색칠된 상태이므로 완성 가능
+  // artworkId가 존재해야 완성 처리가 가능 (서버에 작품이 생성된 이후)
   const isResuming = !!locationState.savedImageUrl;
-  const isCompleteEnabled = isResuming || hasColoredAnything;
+  const isCompleteEnabled = (isResuming || hasColoredAnything) && !!artworkId;
 
   // 최소 2.5초 로딩 보장
   useEffect(() => {
@@ -147,6 +142,15 @@ const useColoringPlayPage = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // ref 동기화 — 캔버스 탭 좌표 역변환에 사용
+  useEffect(() => {
+    rotationRef.current = rotation;
+  }, [rotation]);
+
+  useEffect(() => {
+    zoomScaleRef.current = zoomPercent / 100;
+  }, [zoomPercent]);
+
   // 첫 색칠 시 작품 생성 (색칠 안 하면 작품 미생성)
   useEffect(() => {
     if (!isLoading && !artworkId && id && hasColoredAnything) {
@@ -156,9 +160,9 @@ const useColoringPlayPage = () => {
 
   const [isBackModalOpen, setIsBackModalOpen] = useState(false);
 
-  // 뒤로가기 버튼 → 색칠한 게 있으면 모달, 없으면 바로 이동
+  // 뒤로가기 버튼 → 이번 세션에서 색칠한 게 있으면 모달, 없으면 바로 이동
   const handleBack = () => {
-    if (isResuming || hasColoredAnything) {
+    if (hasColoredAnything) {
       setIsBackModalOpen(true);
     } else {
       navigate(-1);
@@ -179,10 +183,12 @@ const useColoringPlayPage = () => {
   };
 
   const handleComplete = async () => {
+    // 작품이 생성되지 않았으면 완성 불가
+    if (!artworkId) return;
+
     // 완성 전 최종 저장
-    if (artworkId) {
-      await handleSaveArtwork(getCanvasFile, getProgress);
-    }
+    await handleSaveArtwork(getCanvasFile, getProgress);
+
     const completedImageUrl = getCanvasDataUrl();
     navigate(`/coloring/${id}/complete`, {
       state: {
@@ -289,40 +295,72 @@ const useColoringPlayPage = () => {
     setZoomPercent((prev) => Math.max(prev - ZOOM_STEP, ZOOM_MIN));
   }, []);
 
-  // 팬(드래그) 핸들러 — 확대 모드에서 도안 이동
-  const handlePanStart = useCallback(
+  // 드래그 핸들러 — 확대 모드에서 도안 회전 (수평 드래그 → 회전)
+  const handleDragStart = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
-      isPanningRef.current = true;
-      panStartRef.current = { x: e.clientX, y: e.clientY };
-      panOffsetRef.current = { x: panX, y: panY };
+      isDraggingRef.current = true;
+      dragStartXRef.current = e.clientX;
+      rotationStartRef.current = rotation;
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     },
-    [panX, panY],
+    [rotation],
   );
 
-  const handlePanMove = useCallback(
+  const handleDragMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
-      if (!isPanningRef.current) return;
-      const scale = zoomPercent / 100;
-      const dx = (e.clientX - panStartRef.current.x) / scale;
-      const dy = (e.clientY - panStartRef.current.y) / scale;
-      setPanX(panOffsetRef.current.x + dx);
-      setPanY(panOffsetRef.current.y + dy);
+      if (!isDraggingRef.current || isPinchingRef.current) return;
+      const dx = e.clientX - dragStartXRef.current;
+      setRotation(rotationStartRef.current + dx * 0.5);
+    },
+    [],
+  );
+
+  const handleDragEnd = useCallback(() => {
+    isDraggingRef.current = false;
+  }, []);
+
+  // 핀치 줌 핸들러 — 두 손가락 터치로 확대/축소
+  const getPinchDistance = (t1: React.Touch, t2: React.Touch) => {
+    const dx = t1.clientX - t2.clientX;
+    const dy = t1.clientY - t2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const handlePinchStart = useCallback(
+    (e: React.TouchEvent<HTMLDivElement>) => {
+      if (e.touches.length !== 2) return;
+      isPinchingRef.current = true;
+      isDraggingRef.current = false;
+      pinchStartDistRef.current = getPinchDistance(e.touches[0], e.touches[1]);
+      zoomStartRef.current = zoomPercent;
     },
     [zoomPercent],
   );
 
-  const handlePanEnd = useCallback(() => {
-    isPanningRef.current = false;
+  const handlePinchMove = useCallback(
+    (e: React.TouchEvent<HTMLDivElement>) => {
+      if (e.touches.length !== 2 || !isPinchingRef.current) return;
+      const dist = getPinchDistance(e.touches[0], e.touches[1]);
+      const ratio = dist / pinchStartDistRef.current;
+      const newZoom = Math.round(
+        Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoomStartRef.current * ratio)),
+      );
+      setZoomPercent(newZoom);
+    },
+    [],
+  );
+
+  const handlePinchEnd = useCallback(() => {
+    isPinchingRef.current = false;
   }, []);
 
   const zoomScale = zoomPercent / 100;
 
-  // 줌/팬 wrapper 스타일 — 도안 프레임(테두리+그림자) 전체에 적용
+  // 줌/회전 wrapper 스타일 — 도안 프레임(테두리+그림자) 전체에 적용
   const zoomContainerStyle: React.CSSProperties = {
     transform:
-      zoomScale !== 1 || panX !== 0 || panY !== 0
-        ? `scale(${zoomScale}) translate(${panX}px, ${panY}px)`
+      zoomScale !== 1 || rotation !== 0
+        ? `scale(${zoomScale}) rotate(${rotation}deg)`
         : undefined,
     transformOrigin: "center center",
     touchAction: activeMode === "zoom" ? "none" : undefined,
@@ -332,9 +370,7 @@ const useColoringPlayPage = () => {
     isLoading,
     title,
     imageUrl,
-    isSvgMode,
     canvasRef,
-    svgContainerRef,
     colors: DEFAULT_COLORS,
     selectedColor,
     canUndo,
@@ -347,7 +383,6 @@ const useColoringPlayPage = () => {
     handleComplete,
     handleSelectColor,
     handleCanvasTap,
-    handleSvgClick,
     handleUndo,
     handleRedo,
     handlePalette,
@@ -371,12 +406,13 @@ const useColoringPlayPage = () => {
     handleZoomIn,
     handleZoomOut,
     zoomContainerStyle,
-    zoomScale,
-    panX,
-    panY,
-    handlePanStart,
-    handlePanMove,
-    handlePanEnd,
+    rotation,
+    handleDragStart,
+    handleDragMove,
+    handleDragEnd,
+    handlePinchStart,
+    handlePinchMove,
+    handlePinchEnd,
   };
 };
 

@@ -19,16 +19,26 @@ function ColorPaletteBar({ colors, selectedColor, onSelectColor }: ColorPaletteB
       <div className="h-[33px] w-px bg-[#D9D9D9]" />
 
       {/* 색상 목록 (가로 스크롤) */}
-      <div className="flex gap-[8px] overflow-x-auto scrollbar-hide">
-        {colors.map((color) => (
-          <button
-            key={color}
-            type="button"
-            onClick={() => onSelectColor(color)}
-            className="size-[40px] shrink-0 rounded-full cursor-pointer"
-            style={{ backgroundColor: color }}
-          />
-        ))}
+      <div className="relative min-w-0 flex-1">
+        <div className="flex gap-[8px] overflow-x-auto scrollbar-hide">
+          {colors.map((color) => (
+            <button
+              key={color}
+              type="button"
+              onClick={() => onSelectColor(color)}
+              className="size-[40px] shrink-0 rounded-full cursor-pointer"
+              style={{ backgroundColor: color }}
+            />
+          ))}
+        </div>
+        {/* 왼쪽 페이드 그라데이션 */}
+        <div
+          className="pointer-events-none absolute left-0 top-0 h-full w-[37px]"
+          style={{
+            background:
+              "linear-gradient(to right, #FFFFFF 9.5%, rgba(255,255,255,0) 78.4%)",
+          }}
+        />
       </div>
     </div>
   );

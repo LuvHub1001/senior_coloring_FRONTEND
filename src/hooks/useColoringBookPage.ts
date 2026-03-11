@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDesignList, useDesignDetail, useDesignCategories } from "@/hooks/useDesigns";
+import { useShare } from "@/hooks/useShare";
+import goldFrame from "@images/home/gold_frame.svg";
 import { getArtworks, deleteArtwork } from "@/apis/ArtworkFetcher";
 import type { Artwork } from "@/types";
 
@@ -15,6 +17,8 @@ const useColoringBookPage = () => {
   const categories = ["전체", ...apiCategories];
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const { handleShare: shareImage, isShareToastVisible, shareToastMessage } = useShare();
   const [selectedDesignId, setSelectedDesignId] = useState<string | null>(null);
 
   // 카테고리 필터링: "전체"면 undefined로 전달하여 전체 조회
@@ -54,6 +58,7 @@ const useColoringBookPage = () => {
       queryClient.invalidateQueries({ queryKey: ["artworks"] });
       setSelectedArtwork(null);
       setIsMoreMenuOpen(false);
+      setIsDeleteConfirmOpen(false);
     },
   });
 
@@ -92,6 +97,7 @@ const useColoringBookPage = () => {
   const handleClosePreview = () => {
     setSelectedArtwork(null);
     setIsMoreMenuOpen(false);
+    setIsDeleteConfirmOpen(false);
   };
 
   // 이어 그리기 → 저장된 이미지로 색칠 페이지 이동
@@ -115,14 +121,27 @@ const useColoringBookPage = () => {
     setIsMoreMenuOpen((prev) => !prev);
   };
 
-  const handleDeleteArtwork = () => {
+  // 삭제 메뉴 클릭 → 확인 모달 열기
+  const handleDeleteClick = () => {
+    setIsMoreMenuOpen(false);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  // 삭제 확인 → 실제 삭제 실행
+  const handleDeleteConfirm = () => {
     if (!selectedArtwork) return;
     deleteMutation.mutate(selectedArtwork.id);
   };
 
-  const handleShareArtwork = () => {
-    // TODO: 공유하기 기능
+  // 삭제 취소
+  const handleDeleteCancel = () => {
+    setIsDeleteConfirmOpen(false);
+  };
+
+  const handleShareArtwork = async () => {
+    if (!selectedArtwork) return;
     setIsMoreMenuOpen(false);
+    await shareImage(selectedArtwork.imageUrl, goldFrame);
   };
 
   // 도안 클릭 → 상세 모달 열기
@@ -159,12 +178,17 @@ const useColoringBookPage = () => {
     handleContinueColoring,
     handleExhibit,
     handleToggleMoreMenu,
-    handleDeleteArtwork,
+    handleDeleteClick,
+    handleDeleteConfirm,
+    handleDeleteCancel,
+    isDeleteConfirmOpen,
     handleShareArtwork,
     selectedDesign,
     isDesignDetailLoading,
     handleCloseDesignDetail,
     handleStartColoring,
+    isShareToastVisible,
+    shareToastMessage,
   };
 };
 

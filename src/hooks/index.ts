@@ -8,11 +8,12 @@ import { useAuthCallbackPage } from "@/hooks/useAuthCallbackPage";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useDesignList, useDesignDetail, useDesignCategories, useCreateDesign } from "@/hooks/useDesigns";
 import { useColoringCanvas } from "@/hooks/useColoringCanvas";
-import { useColoringSvg } from "@/hooks/useColoringSvg";
+
 import { useArtworkSave } from "@/hooks/useArtworkSave";
 import { useCompletionPage } from "@/hooks/useCompletionPage";
 import { useLogout } from "@/hooks/useLogout";
 import { useArtworkDetail } from "@/hooks/useArtworkDetail";
+import { useShare } from "@/hooks/useShare";
 
 export {
   useImageCarousel,
@@ -27,9 +28,10 @@ export {
   useDesignCategories,
   useCreateDesign,
   useColoringCanvas,
-  useColoringSvg,
+
   useArtworkSave,
   useCompletionPage,
   useLogout,
   useArtworkDetail,
+  useShare,
 };

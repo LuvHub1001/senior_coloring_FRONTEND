@@ -12,9 +12,10 @@ const hexToRgba = (hex: string): { r: number; g: number; b: number; a: number } 
 const getLuminance = (r: number, g: number, b: number): number =>
   0.299 * r + 0.587 * g + 0.114 * b;
 
-// 스캔라인 플러드 필 — 경계 감지 + 색상 매칭 + 갭 채우기 후처리
+// 스캔라인 플러드 필 — 원본 도안 기반 경계 감지 + 멀티패스 갭 닫기 + 후처리
 const floodFill = (
   imageData: ImageData,
+  originalData: Uint8ClampedArray,
   startX: number,
   startY: number,
   fillColor: { r: number; g: number; b: number; a: number },
@@ -29,9 +30,10 @@ const floodFill = (
   const startB = data[startIdx + 2];
   const startA = data[startIdx + 3];
 
-  // 시작 픽셀이 선(어두운 픽셀)이면 채우지 않음
-  const startLum = getLuminance(startR, startG, startB);
-  if (startLum < lineThreshold) {
+  // 시작 픽셀이 원본 도안에서 선(어두운 픽셀)이면 채우지 않음
+  const origStartIdx = startIdx;
+  const origLum = getLuminance(originalData[origStartIdx], originalData[origStartIdx + 1], originalData[origStartIdx + 2]);
+  if (origLum < lineThreshold) {
     return false;
   }
 
@@ -45,35 +47,54 @@ const floodFill = (
     return false;
   }
 
-  // 경계 맵 사전 계산 — 휘도 기반 선 감지
+  // 경계 맵 사전 계산 — 원본 도안의 휘도 기반 선 감지
+  // 현재 캔버스가 아닌 원본을 참조하므로, 사용자가 칠한 색은 경계로 취급되지 않음
   const hardBoundary = new Uint8Array(totalPixels);
   for (let i = 0; i < totalPixels; i++) {
     const idx = i * 4;
-    const lum = getLuminance(data[idx], data[idx + 1], data[idx + 2]);
+    const lum = getLuminance(originalData[idx], originalData[idx + 1], originalData[idx + 2]);
     if (lum < lineThreshold) {
       hardBoundary[i] = 1;
     }
   }
 
-  // 경계 맵 보강: 1px 틈새 닫기 (수평/수직 방향 경계 사이 빈 픽셀 메우기)
-  // 얇은 선의 미세한 끊김으로 인한 색 번짐 방지
+  // 경계 맵 보강: 멀티패스 갭 닫기 (최대 3px 틈새까지 처리)
+  // 각 패스에서 1px 갭을 닫고, 결과를 다음 패스 입력으로 사용
+  const GAP_CLOSE_PASSES = 3;
   const closedBoundary = new Uint8Array(hardBoundary);
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const pi = y * width + x;
-      if (closedBoundary[pi]) continue;
 
-      // 수평 방향: 좌우 모두 경계이면 사이 픽셀도 경계로 처리
-      const closedH =
-        x > 0 && x < width - 1 && hardBoundary[pi - 1] && hardBoundary[pi + 1];
-      // 수직 방향: 상하 모두 경계이면 사이 픽셀도 경계로 처리
-      const closedV =
-        y > 0 && y < height - 1 && hardBoundary[pi - width] && hardBoundary[pi + width];
+  for (let pass = 0; pass < GAP_CLOSE_PASSES; pass++) {
+    // 현재 상태를 기준으로 새 갭 감지
+    const prev = new Uint8Array(closedBoundary);
+    let changed = false;
 
-      if (closedH || closedV) {
-        closedBoundary[pi] = 1;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const pi = y * width + x;
+        if (closedBoundary[pi]) continue;
+
+        // 수평 방향: 좌우 모두 경계이면 사이 픽셀도 경계로 처리
+        const closedH =
+          x > 0 && x < width - 1 && prev[pi - 1] && prev[pi + 1];
+        // 수직 방향: 상하 모두 경계이면 사이 픽셀도 경계로 처리
+        const closedV =
+          y > 0 && y < height - 1 && prev[pi - width] && prev[pi + width];
+        // 대각선 방향: 좌상↔우하, 우상↔좌하
+        const closedD1 =
+          x > 0 && y > 0 && x < width - 1 && y < height - 1 &&
+          prev[pi - width - 1] && prev[pi + width + 1];
+        const closedD2 =
+          x > 0 && y > 0 && x < width - 1 && y < height - 1 &&
+          prev[pi - width + 1] && prev[pi + width - 1];
+
+        if (closedH || closedV || closedD1 || closedD2) {
+          closedBoundary[pi] = 1;
+          changed = true;
+        }
       }
     }
+
+    if (!changed) break;
   }
 
   const visited = new Uint8Array(totalPixels);
@@ -147,8 +168,9 @@ const floodFill = (
     }
   }
 
-  // 후처리 1단계: 채워진 영역을 경계선까지 8방향 팽창하여 안티앨리어싱 갭 제거
-  const GAP_FILL_ITERATIONS = 6;
+  // 후처리 1단계: 채워진 영역을 경계선까지 4방향 팽창하여 안티앨리어싱 갭 제거
+  // (8방향 대신 4방향으로 제한하여 과도한 팽창 방지)
+  const GAP_FILL_ITERATIONS = 3;
   for (let iter = 0; iter < GAP_FILL_ITERATIONS; iter++) {
     let changed = false;
 
@@ -157,16 +179,12 @@ const floodFill = (
         const pi = y * width + x;
         if (visited[pi] || hardBoundary[pi]) continue;
 
-        // 8방향 이웃 중 채워진 픽셀이 있는지 확인 (대각선 포함)
+        // 4방향 이웃 중 채워진 픽셀이 있는지 확인
         const hasFilledNeighbor =
           (x > 0 && visited[pi - 1]) ||
           (x < width - 1 && visited[pi + 1]) ||
           (y > 0 && visited[pi - width]) ||
-          (y < height - 1 && visited[pi + width]) ||
-          (x > 0 && y > 0 && visited[pi - width - 1]) ||
-          (x < width - 1 && y > 0 && visited[pi - width + 1]) ||
-          (x > 0 && y < height - 1 && visited[pi + width - 1]) ||
-          (x < width - 1 && y < height - 1 && visited[pi + width + 1]);
+          (y < height - 1 && visited[pi + width]);
 
         if (hasFilledNeighbor) {
           fillPixel(pi);
@@ -178,35 +196,32 @@ const floodFill = (
     if (!changed) break;
   }
 
-  // 후처리 2단계: 경계선 인접 안티앨리어싱 픽셀에 알파 블렌딩 적용 (8방향 탐색)
+  // 후처리 2단계: 경계선 인접 안티앨리어싱 픽셀에 알파 블렌딩 적용
   // 채워진 영역과 윤곽선 사이의 전환을 자연스럽게 처리
+  const BLEND_DARK_LIMIT = 40;
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const pi = y * width + x;
       if (visited[pi]) continue;
       if (!hardBoundary[pi]) continue;
 
-      // 경계 픽셀 중 채워진 8방향 이웃이 있는 픽셀만 블렌딩 대상
+      // 경계 픽셀 중 채워진 4방향 이웃이 있는 픽셀만 블렌딩 대상
       const hasFilledNeighbor =
         (x > 0 && visited[pi - 1]) ||
         (x < width - 1 && visited[pi + 1]) ||
         (y > 0 && visited[pi - width]) ||
-        (y < height - 1 && visited[pi + width]) ||
-        (x > 0 && y > 0 && visited[pi - width - 1]) ||
-        (x < width - 1 && y > 0 && visited[pi - width + 1]) ||
-        (x > 0 && y < height - 1 && visited[pi + width - 1]) ||
-        (x < width - 1 && y < height - 1 && visited[pi + width + 1]);
+        (y < height - 1 && visited[pi + width]);
 
       if (!hasFilledNeighbor) continue;
 
       const idx = pi * 4;
       const lum = getLuminance(data[idx], data[idx + 1], data[idx + 2]);
 
-      // 완전히 어두운 선(lum < 40)은 블렌딩하지 않고 보존
-      if (lum < 40) continue;
+      // 완전히 어두운 선은 블렌딩하지 않고 보존
+      if (lum < BLEND_DARK_LIMIT) continue;
 
       // 휘도에 비례하여 채색 비율 결정 (밝을수록 채색 비율 높음)
-      const blendRatio = Math.min((lum - 40) / (lineThreshold - 40), 1);
+      const blendRatio = Math.min((lum - BLEND_DARK_LIMIT) / (lineThreshold - BLEND_DARK_LIMIT), 1);
       data[idx] = Math.round(data[idx] * (1 - blendRatio) + fillColor.r * blendRatio);
       data[idx + 1] = Math.round(data[idx + 1] * (1 - blendRatio) + fillColor.g * blendRatio);
       data[idx + 2] = Math.round(data[idx + 2] * (1 - blendRatio) + fillColor.b * blendRatio);
@@ -216,12 +231,20 @@ const floodFill = (
   return true;
 };
 
-const FLOOD_FILL_TOLERANCE = 55;
-const LINE_BOUNDARY_THRESHOLD = 110;
-const ANTI_ALIAS_THRESHOLD = 180;
+const FLOOD_FILL_TOLERANCE = 25;
+const LINE_BOUNDARY_THRESHOLD = 180;
+
 const MAX_HISTORY = 50;
 
-const useColoringCanvas = (imageUrl: string, selectedColor: string) => {
+// 캔버스 디스플레이 너비 (CSS w-[335px])
+const CANVAS_DISPLAY_WIDTH = 335;
+
+const useColoringCanvas = (
+  imageUrl: string,
+  selectedColor: string,
+  rotationRef?: React.RefObject<number>,
+  zoomScaleRef?: React.RefObject<number>,
+) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const historyRef = useRef<ImageData[]>([]);
   const historyIndexRef = useRef(-1);
@@ -285,16 +308,51 @@ const useColoringCanvas = (imageUrl: string, selectedColor: string) => {
       if (!ctx) return;
 
       const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      const x = Math.floor((e.clientX - rect.left) * scaleX);
-      const y = Math.floor((e.clientY - rect.top) * scaleY);
+      const currentRotation = rotationRef?.current ?? 0;
+      const currentScale = zoomScaleRef?.current ?? 1;
+
+      let x: number;
+      let y: number;
+
+      if (currentRotation === 0 && currentScale === 1) {
+        // 변환 없음 — 기존 방식
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        x = Math.floor((e.clientX - rect.left) * scaleX);
+        y = Math.floor((e.clientY - rect.top) * scaleY);
+      } else {
+        // 회전/확대 적용 — 역변환으로 캔버스 좌표 계산
+        const displayW = CANVAS_DISPLAY_WIDTH;
+        const displayH = canvas.height * (displayW / canvas.width);
+
+        // AABB 중심 = 캔버스 시각적 중심
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+
+        // 클릭 위치를 중심 기준으로 변환
+        const dx = e.clientX - cx;
+        const dy = e.clientY - cy;
+
+        // 역 회전
+        const rad = -currentRotation * (Math.PI / 180);
+        const rx = dx * Math.cos(rad) - dy * Math.sin(rad);
+        const ry = dx * Math.sin(rad) + dy * Math.cos(rad);
+
+        // 역 스케일 → 캔버스 픽셀 좌표로 변환
+        const ux = rx / currentScale;
+        const uy = ry / currentScale;
+        x = Math.floor((ux / displayW + 0.5) * canvas.width);
+        y = Math.floor((uy / displayH + 0.5) * canvas.height);
+      }
 
       if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) return;
 
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const originalData = historyRef.current[0]?.data;
+      if (!originalData) return;
+
       const fillColor = hexToRgba(selectedColor);
-      const filled = floodFill(imageData, x, y, fillColor, FLOOD_FILL_TOLERANCE, LINE_BOUNDARY_THRESHOLD);
+      const filled = floodFill(imageData, originalData, x, y, fillColor, FLOOD_FILL_TOLERANCE, LINE_BOUNDARY_THRESHOLD);
 
       if (filled) {
         ctx.putImageData(imageData, 0, 0);
@@ -347,34 +405,42 @@ const useColoringCanvas = (imageUrl: string, selectedColor: string) => {
     setHistoryVersion((v) => v + 1);
   }, []);
 
-  // 색칠 진행률 계산 (색칠 가능 영역 대비 색칠된 비율)
+  // 색칠 진행률 계산 — 원본 도안과 현재 상태를 비교하여 변경된 픽셀 비율 산출
   const getProgress = useCallback((): number => {
     const canvas = canvasRef.current;
     if (!canvas) return 0;
 
+    const initialData = historyRef.current[0];
+    if (!initialData) return 0;
+
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) return 0;
 
-    const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const total = width * height;
+    const current = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const total = current.width * current.height;
     let fillable = 0;
     let colored = 0;
 
+    const PIXEL_CHANGE_THRESHOLD = 30;
+
     for (let i = 0; i < total; i++) {
       const idx = i * 4;
-      const r = data[idx];
-      const g = data[idx + 1];
-      const b = data[idx + 2];
-      const lum = getLuminance(r, g, b);
 
-      // 윤곽선(어두운 픽셀)과 안티앨리어싱 회색 영역은 집계에서 제외
-      if (lum < ANTI_ALIAS_THRESHOLD) continue;
+      // 원본 도안에서 윤곽선(어두운 픽셀)은 색칠 대상이 아니므로 제외
+      const origR = initialData.data[idx];
+      const origG = initialData.data[idx + 1];
+      const origB = initialData.data[idx + 2];
+      const origLum = getLuminance(origR, origG, origB);
+      if (origLum < LINE_BOUNDARY_THRESHOLD) continue;
 
       fillable++;
 
-      // 흰색 계열이 아닌 픽셀 = 색칠된 픽셀
-      const isWhite = r > 230 && g > 230 && b > 230;
-      if (!isWhite) {
+      // 원본 대비 현재 픽셀이 충분히 변했으면 색칠된 것으로 판정
+      const curR = current.data[idx];
+      const curG = current.data[idx + 1];
+      const curB = current.data[idx + 2];
+      const diff = Math.abs(curR - origR) + Math.abs(curG - origG) + Math.abs(curB - origB);
+      if (diff > PIXEL_CHANGE_THRESHOLD) {
         colored++;
       }
     }
