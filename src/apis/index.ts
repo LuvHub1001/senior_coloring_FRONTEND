@@ -88,3 +88,23 @@ instance.interceptors.response.use(
 );
 
 export default instance;
+
+// Barrel re-export: 모든 Fetcher 함수 통합
+export {
+  createArtwork,
+  saveArtwork,
+  getArtworks,
+  getArtworkById,
+  completeArtwork,
+  featureArtwork,
+  deleteArtwork,
+} from "@/apis/ArtworkFetcher";
+export {
+  getDesigns,
+  getDesignCategories,
+  getDesignById,
+  createDesign,
+} from "@/apis/DesignFetcher";
+export { getThemes, selectTheme } from "@/apis/ThemeFetcher";
+export { getUserProfile } from "@/apis/UserFetcher";
+export { postRefreshToken, postLogout } from "@/apis/AuthFetcher";

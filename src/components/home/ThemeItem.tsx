@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 interface ThemeItemProps {
   name: string;
   description: string;
@@ -7,7 +9,7 @@ interface ThemeItemProps {
   onSelect?: () => void;
 }
 
-function ThemeItem({
+const ThemeItem = memo(function ThemeItem({
   name,
   description,
   imageUrl,
@@ -23,6 +25,7 @@ function ThemeItem({
           <img
             src={imageUrl}
             alt={name}
+            loading="lazy"
             className="size-16 shrink-0 rounded-[10px] opacity-40 object-cover"
           />
 
@@ -55,6 +58,7 @@ function ThemeItem({
         <img
           src={imageUrl}
           alt={name}
+          loading="lazy"
           className="size-[72px] shrink-0 rounded-[9px] border border-[#E5E8EB] object-cover"
         />
 
@@ -91,6 +95,6 @@ function ThemeItem({
       )}
     </button>
   );
-}
+});
 
 export { ThemeItem };

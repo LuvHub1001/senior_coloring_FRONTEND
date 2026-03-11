@@ -1,4 +1,4 @@
-import type { Design } from "@/types/DesignType";
+import type { Design } from "@/types";
 
 export type ArtworkStatus = "IN_PROGRESS" | "COMPLETED";
 

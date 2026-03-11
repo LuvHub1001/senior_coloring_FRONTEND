@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { createArtwork, saveArtwork } from "@/apis/ArtworkFetcher";
+import { createArtwork, saveArtwork } from "@/apis";
 
 // 작품 생성 및 임시 저장 관리 (initialArtworkId: 이어 그리기 시 기존 작품 ID)
 const useArtworkSave = (designId: string, initialArtworkId?: string) => {

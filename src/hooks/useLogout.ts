@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { postLogout } from "@/apis/AuthFetcher";
+import { postLogout } from "@/apis";
 
 const useLogout = () => {
   const navigate = useNavigate();

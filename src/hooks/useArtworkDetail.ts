@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteArtwork } from "@/apis/ArtworkFetcher";
+import { deleteArtwork } from "@/apis";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useShare } from "@/hooks/useShare";
 import type { Artwork } from "@/types";
@@ -63,7 +63,7 @@ const useArtworkDetail = (frameImageUrl?: string) => {
   const handleShare = async () => {
     if (!selectedArtwork) return;
     setIsMenuOpen(false);
-    await shareImage(selectedArtwork.imageUrl, frameImageUrl ?? "");
+    await shareImage(selectedArtwork.imageUrl ?? "", frameImageUrl ?? "");
   };
 
   // 삭제 메뉴 클릭 → 확인 모달 열기

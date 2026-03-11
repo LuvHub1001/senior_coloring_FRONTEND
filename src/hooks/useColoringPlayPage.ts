@@ -301,7 +301,9 @@ const useColoringPlayPage = () => {
       isDraggingRef.current = true;
       dragStartXRef.current = e.clientX;
       rotationStartRef.current = rotation;
-      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      if (e.currentTarget instanceof HTMLElement) {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      }
     },
     [rotation],
   );

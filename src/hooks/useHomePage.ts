@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { getThemes, selectTheme } from "@/apis/ThemeFetcher";
-import { getArtworks, featureArtwork } from "@/apis/ArtworkFetcher";
+import { getThemes, selectTheme, getArtworks, featureArtwork } from "@/apis";
 import goldFrame from "@images/home/gold_frame.svg";
 import silverFrame from "@images/home/silver_frame.svg";
 
@@ -24,7 +23,7 @@ const useHomePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const locationState = location.state as HomeLocationState | null;
+  const locationState = (location.state ?? null) as HomeLocationState | null;
   const { userProfile, isLoading: isProfileLoading } = useUserProfile();
   const [showWelcome, setShowWelcome] = useState(
     locationState?.isNewUser === true
@@ -47,15 +46,19 @@ const useHomePage = () => {
   });
 
   // API 데이터를 컴포넌트 형태로 매핑
-  const themes = (themesData?.data ?? []).map((theme) => ({
-    id: theme.id,
-    name: theme.name,
-    description: theme.unlocked
-      ? "사용 가능"
-      : `작품 ${theme.requiredArtworks}개 완성하기`,
-    imageUrl: theme.imageUrl,
-    isLocked: !theme.unlocked,
-  }));
+  const themes = useMemo(
+    () =>
+      (themesData?.data ?? []).map((theme) => ({
+        id: theme.id,
+        name: theme.name,
+        description: theme.unlocked
+          ? "사용 가능"
+          : `작품 ${theme.requiredArtworks}개 완성하기`,
+        imageUrl: theme.imageUrl,
+        isLocked: !theme.unlocked,
+      })),
+    [themesData],
+  );
 
   // 현재 선택된 테마 ID (유저 프로필 기준)
   const selectedThemeId = userProfile?.selectedThemeId ?? 1;
