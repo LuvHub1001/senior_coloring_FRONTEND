@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useDesignDetail } from "@/hooks/useDesigns";
 import { useColoringCanvas } from "@/hooks/useColoringCanvas";
-import { useColoringSvg } from "@/hooks/useColoringSvg";
 import { useArtworkSave } from "@/hooks/useArtworkSave";
 
 // HSL → HEX 변환
@@ -99,32 +98,19 @@ const useColoringPlayPage = () => {
   const imageUrl = locationState.savedImageUrl ?? apiDesign?.imageUrl ?? locationState.imageUrl ?? "";
   const isLoading = !minLoadingDone || isApiLoading;
 
-  // SVG URL 감지 (.svg 확장자 여부)
-  const isSvgMode = /\.svg(\?|$)/i.test(imageUrl);
-
-  // SVG 패스 기반 색칠 (SVG일 때만 활성)
-  const svgResult = useColoringSvg(isSvgMode ? imageUrl : "", selectedColor);
-
-  // 캔버스 플러드 필 색칠 (비-SVG일 때만 활성)
-  const canvasResult = useColoringCanvas(isSvgMode ? "" : imageUrl, selectedColor);
-
-  // 모드에 따라 통합 인터페이스 선택
+  // 모든 이미지(SVG 포함)를 캔버스 래스터화 후 flood fill로 색칠
   const {
+    canvasRef,
     canUndo,
     canRedo,
     hasColoredAnything,
+    handleCanvasTap,
     handleUndo,
     handleRedo,
     getCanvasDataUrl,
     getCanvasFile,
     getProgress,
-  } = isSvgMode ? svgResult : canvasResult;
-
-  // 모드별 전용 ref / 핸들러
-  const canvasRef = canvasResult.canvasRef;
-  const handleCanvasTap = canvasResult.handleCanvasTap;
-  const svgContainerRef = svgResult.containerRef;
-  const handleSvgClick = svgResult.handleSvgClick;
+  } = useColoringCanvas(imageUrl, selectedColor);
 
   // 작품 생성 및 임시 저장 (이어 그리기 시 기존 artworkId 전달)
   const {
@@ -332,9 +318,7 @@ const useColoringPlayPage = () => {
     isLoading,
     title,
     imageUrl,
-    isSvgMode,
     canvasRef,
-    svgContainerRef,
     colors: DEFAULT_COLORS,
     selectedColor,
     canUndo,
@@ -347,7 +331,6 @@ const useColoringPlayPage = () => {
     handleComplete,
     handleSelectColor,
     handleCanvasTap,
-    handleSvgClick,
     handleUndo,
     handleRedo,
     handlePalette,

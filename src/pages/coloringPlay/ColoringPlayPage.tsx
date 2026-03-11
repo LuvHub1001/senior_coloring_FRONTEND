@@ -2,7 +2,6 @@ import {
   ColoringLoadingSkeleton,
   ColoringPlayHeader,
   ColoringCanvas,
-  ColoringSvgCanvas,
   ColorPaletteBar,
   ColoringToolBar,
   PaletteBottomSheet,
@@ -18,9 +17,7 @@ function ColoringPlayPage() {
     isLoading,
     title,
     imageUrl,
-    isSvgMode,
     canvasRef,
-    svgContainerRef,
     colors,
     selectedColor,
     canUndo,
@@ -33,7 +30,6 @@ function ColoringPlayPage() {
     handleComplete,
     handleSelectColor,
     handleCanvasTap,
-    handleSvgClick,
     handleUndo,
     handleRedo,
     handlePalette,
@@ -94,19 +90,11 @@ function ColoringPlayPage() {
           onPointerUp={activeMode === "zoom" ? handlePanEnd : undefined}
           onPointerLeave={activeMode === "zoom" ? handlePanEnd : undefined}
         >
-          {isSvgMode ? (
-            <ColoringSvgCanvas
-              containerRef={svgContainerRef}
-              onSvgClick={handleSvgClick}
-              isZoomMode={activeMode === "zoom"}
-            />
-          ) : (
-            <ColoringCanvas
-              canvasRef={canvasRef}
-              onCanvasTap={handleCanvasTap}
-              isZoomMode={activeMode === "zoom"}
-            />
-          )}
+          <ColoringCanvas
+            canvasRef={canvasRef}
+            onCanvasTap={handleCanvasTap}
+            isZoomMode={activeMode === "zoom"}
+          />
         </div>
 
         <ZoomToast isVisible={isZoomToastVisible} />
@@ -134,41 +122,43 @@ function ColoringPlayPage() {
         onClose={handlePaletteClose}
       />
 
-      {/* 하단 도구 영역 */}
-      <div className="bg-white">
-        {/* 색상 선택 바 (접힘 시 슬라이드 애니메이션) */}
-        <div
-          className="overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out"
-          style={{
-            maxHeight: isToolBarCollapsed ? 0 : 73,
-            opacity: isToolBarCollapsed ? 0 : 1,
-          }}
-        >
+      {/* 하단 도구 영역 — 로딩 중에는 숨김 */}
+      {!isLoading && (
+        <div className="bg-white">
+          {/* 색상 선택 바 (접힘 시 슬라이드 애니메이션) */}
+          <div
+            className="overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out"
+            style={{
+              maxHeight: isToolBarCollapsed ? 0 : 73,
+              opacity: isToolBarCollapsed ? 0 : 1,
+            }}
+          >
+            <div className="h-px bg-[#E5E7EB]" />
+            <ColorPaletteBar
+              colors={colors}
+              selectedColor={selectedColor}
+              onSelectColor={handleSelectColor}
+            />
+          </div>
+
+          {/* 구분선 */}
           <div className="h-px bg-[#E5E7EB]" />
-          <ColorPaletteBar
-            colors={colors}
+
+          {/* 도구 바 */}
+          <ColoringToolBar
+            canUndo={canUndo}
+            canRedo={canRedo}
             selectedColor={selectedColor}
-            onSelectColor={handleSelectColor}
+            isPaletteActive={isPaletteOpen}
+            isCollapsed={isToolBarCollapsed}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            onPalette={handlePalette}
+            onGuide={handleGuide}
+            onCollapse={handleCollapse}
           />
         </div>
-
-        {/* 구분선 */}
-        <div className="h-px bg-[#E5E7EB]" />
-
-        {/* 도구 바 */}
-        <ColoringToolBar
-          canUndo={canUndo}
-          canRedo={canRedo}
-          selectedColor={selectedColor}
-          isPaletteActive={isPaletteOpen}
-          isCollapsed={isToolBarCollapsed}
-          onUndo={handleUndo}
-          onRedo={handleRedo}
-          onPalette={handlePalette}
-          onGuide={handleGuide}
-          onCollapse={handleCollapse}
-        />
-      </div>
+      )}
       {/* 뒤로가기 확인 모달 */}
       {isBackModalOpen && (
         <SaveConfirmModal
