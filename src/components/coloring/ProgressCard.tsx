@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 interface ProgressCardProps {
   thumbnail: string;
   title: string;
@@ -5,7 +7,7 @@ interface ProgressCardProps {
   onClick: () => void;
 }
 
-function ProgressCard({ thumbnail, title, progress, onClick }: ProgressCardProps) {
+const ProgressCard = memo(function ProgressCard({ thumbnail, title, progress, onClick }: ProgressCardProps) {
   return (
     <button
       type="button"
@@ -17,6 +19,7 @@ function ProgressCard({ thumbnail, title, progress, onClick }: ProgressCardProps
         <img
           src={thumbnail}
           alt={title}
+          loading="lazy"
           className="size-full object-cover"
         />
       </div>
@@ -50,6 +53,6 @@ function ProgressCard({ thumbnail, title, progress, onClick }: ProgressCardProps
       </svg>
     </button>
   );
-}
+});
 
 export { ProgressCard };

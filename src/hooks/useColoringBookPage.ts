@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDesignList, useDesignDetail, useDesignCategories } from "@/hooks/useDesigns";
 import { useShare } from "@/hooks/useShare";
 import goldFrame from "@images/home/gold_frame.svg";
-import { getArtworks, deleteArtwork } from "@/apis/ArtworkFetcher";
+import { getArtworks, deleteArtwork } from "@/apis";
 import type { Artwork } from "@/types";
 
 const useColoringBookPage = () => {
@@ -36,20 +36,25 @@ const useColoringBookPage = () => {
   });
 
   // 같은 도안은 가장 최근 작품만 표시 (진행률 0%는 제외)
-  const inProgressArtworks = (artworksData?.data ?? [])
-    .filter((artwork) => artwork.progress > 0)
-    .reduce<Artwork[]>(
-      (acc, artwork) => {
-        const existing = acc.find((a) => a.designId === artwork.designId);
-        if (!existing) {
-          acc.push(artwork);
-        } else if (new Date(artwork.updatedAt) > new Date(existing.updatedAt)) {
-          acc[acc.indexOf(existing)] = artwork;
-        }
-        return acc;
-      },
-      [],
-    );
+  const inProgressArtworks = useMemo(
+    () =>
+      (artworksData?.data ?? [])
+        .filter((artwork) => artwork.progress > 0)
+        .reduce<Artwork[]>((acc, artwork) => {
+          const existingIndex = acc.findIndex(
+            (a) => a.designId === artwork.designId,
+          );
+          if (existingIndex === -1) {
+            acc.push(artwork);
+          } else if (
+            new Date(artwork.updatedAt) > new Date(acc[existingIndex].updatedAt)
+          ) {
+            acc[existingIndex] = artwork;
+          }
+          return acc;
+        }, []),
+    [artworksData],
+  );
 
   // 작품 삭제 mutation
   const deleteMutation = useMutation({
@@ -63,20 +68,28 @@ const useColoringBookPage = () => {
   });
 
   // ProgressSection에 전달할 데이터 매핑
-  const progressItems = inProgressArtworks.map((artwork) => ({
-    id: artwork.id,
-    thumbnail: artwork.imageUrl ?? artwork.design.imageUrl,
-    title: artwork.design.title,
-    progress: artwork.progress,
-  }));
+  const progressItems = useMemo(
+    () =>
+      inProgressArtworks.map((artwork) => ({
+        id: artwork.id,
+        thumbnail: artwork.imageUrl ?? artwork.design.imageUrl,
+        title: artwork.design.title,
+        progress: artwork.progress,
+      })),
+    [inProgressArtworks],
+  );
 
   // API 응답을 기존 ColoringItemData 형태로 매핑
-  const filteredItems = designs.map((design) => ({
-    id: design.id,
-    imageUrl: design.imageUrl,
-    title: design.title,
-    category: design.category,
-  }));
+  const filteredItems = useMemo(
+    () =>
+      designs.map((design) => ({
+        id: design.id,
+        imageUrl: design.imageUrl,
+        title: design.title,
+        category: design.category,
+      })),
+    [designs],
+  );
 
   const handleBack = () => {
     navigate(-1);
@@ -149,7 +162,7 @@ const useColoringBookPage = () => {
   const handleShareArtwork = async () => {
     if (!selectedArtwork) return;
     setIsMoreMenuOpen(false);
-    await shareImage(selectedArtwork.imageUrl, goldFrame);
+    await shareImage(selectedArtwork.imageUrl ?? "", goldFrame);
   };
 
   // 도안 클릭 → 상세 모달 열기

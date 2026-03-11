@@ -1,3 +1,5 @@
+import { useSliderDrag } from "@/hooks";
+
 interface PaletteBottomSheetProps {
   isOpen: boolean;
   paletteColor: string;
@@ -103,28 +105,7 @@ interface HueSliderProps {
 }
 
 function HueSlider({ percent, onChange }: HueSliderProps) {
-  const handlePointerDown = (e: React.PointerEvent) => {
-    const bar = e.currentTarget as HTMLElement;
-    const rect = bar.getBoundingClientRect();
-    bar.setPointerCapture(e.pointerId);
-
-    const update = (clientX: number) => {
-      const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-      onChange((x / rect.width) * 100);
-    };
-
-    update(e.clientX);
-
-    const onMove = (ev: PointerEvent) => {
-      update(ev.clientX);
-    };
-    const onUp = () => {
-      bar.removeEventListener("pointermove", onMove);
-      bar.removeEventListener("pointerup", onUp);
-    };
-    bar.addEventListener("pointermove", onMove);
-    bar.addEventListener("pointerup", onUp);
-  };
+  const { handlePointerDown } = useSliderDrag(onChange);
 
   return (
     <div
@@ -153,28 +134,7 @@ interface BrightnessSliderProps {
 }
 
 function BrightnessSlider({ color, percent, onChange }: BrightnessSliderProps) {
-  const handlePointerDown = (e: React.PointerEvent) => {
-    const bar = e.currentTarget as HTMLElement;
-    const rect = bar.getBoundingClientRect();
-    bar.setPointerCapture(e.pointerId);
-
-    const update = (clientX: number) => {
-      const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-      onChange((x / rect.width) * 100);
-    };
-
-    update(e.clientX);
-
-    const onMove = (ev: PointerEvent) => {
-      update(ev.clientX);
-    };
-    const onUp = () => {
-      bar.removeEventListener("pointermove", onMove);
-      bar.removeEventListener("pointerup", onUp);
-    };
-    bar.addEventListener("pointermove", onMove);
-    bar.addEventListener("pointerup", onUp);
-  };
+  const { handlePointerDown } = useSliderDrag(onChange);
 
   /* 밝기 단계 마커 위치 (7개) */
   const MARKER_POSITIONS = [0, 16.67, 33.33, 50, 66.67, 83.33, 100];

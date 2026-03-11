@@ -18,7 +18,8 @@ const useImageCarousel = (itemCount: number, speed: number = 0.5) => {
     const calculate = () => {
       if (!containerRef.current || !containerRef.current.children.length) return;
 
-      const firstItem = containerRef.current.children[0] as HTMLElement;
+      const firstItem = containerRef.current.children[0];
+      if (!(firstItem instanceof HTMLElement)) return;
       const gap = parseFloat(getComputedStyle(containerRef.current).gap) || 0;
       const itemWidth = firstItem.offsetWidth + gap;
       const singleSetWidth = itemWidth * itemCount;

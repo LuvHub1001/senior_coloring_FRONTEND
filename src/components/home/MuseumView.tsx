@@ -133,6 +133,7 @@ function MuseumView({
                 <img
                   src={artwork.imageUrl ?? ""}
                   alt="작품 썸네일"
+                  loading="lazy"
                   className="m-[4px] size-[60px] object-cover rounded-[8px]"
                 />
               </button>

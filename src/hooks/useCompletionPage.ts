@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { completeArtwork, deleteArtwork, featureArtwork } from "@/apis/ArtworkFetcher";
+import { completeArtwork, deleteArtwork, featureArtwork } from "@/apis";
 import { useShare } from "@/hooks/useShare";
 import goldFrame from "@images/home/gold_frame.svg";
 import type { UnlockedTheme } from "@/types";

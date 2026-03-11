@@ -14,6 +14,7 @@ import { useCompletionPage } from "@/hooks/useCompletionPage";
 import { useLogout } from "@/hooks/useLogout";
 import { useArtworkDetail } from "@/hooks/useArtworkDetail";
 import { useShare } from "@/hooks/useShare";
+import { useSliderDrag } from "@/hooks/useSliderDrag";
 
 export {
   useImageCarousel,
@@ -34,4 +35,5 @@ export {
   useLogout,
   useArtworkDetail,
   useShare,
+  useSliderDrag,
 };

@@ -1,10 +1,12 @@
+import { memo } from "react";
+
 interface ColoringItemProps {
   imageUrl: string;
   title: string;
   onClick: () => void;
 }
 
-function ColoringItem({ imageUrl, title, onClick }: ColoringItemProps) {
+const ColoringItem = memo(function ColoringItem({ imageUrl, title, onClick }: ColoringItemProps) {
   return (
     <button
       type="button"
@@ -17,6 +19,7 @@ function ColoringItem({ imageUrl, title, onClick }: ColoringItemProps) {
           <img
             src={imageUrl}
             alt={title}
+            loading="lazy"
             className="size-full object-cover"
           />
         </div>
@@ -28,6 +31,6 @@ function ColoringItem({ imageUrl, title, onClick }: ColoringItemProps) {
       </div>
     </button>
   );
-}
+});
 
 export { ColoringItem };
