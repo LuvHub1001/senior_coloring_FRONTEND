@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { completeArtwork } from "@/apis/ArtworkFetcher";
+import { completeArtwork, deleteArtwork, featureArtwork } from "@/apis/ArtworkFetcher";
 import type { UnlockedTheme } from "@/types";
 
 interface CompletionLocationState {
   completedImageUrl?: string;
   title?: string;
   artworkId?: string;
+  originalArtworkId?: string;
+  isOriginalFeatured?: boolean;
 }
 
 const useCompletionPage = () => {
@@ -19,6 +21,8 @@ const useCompletionPage = () => {
   const completedImageUrl = locationState.completedImageUrl ?? "";
   const title = locationState.title ?? "작품";
   const artworkId = locationState.artworkId ?? "";
+  const originalArtworkId = locationState.originalArtworkId;
+  const isOriginalFeatured = locationState.isOriginalFeatured ?? false;
 
   const [unlockedTheme, setUnlockedTheme] = useState<UnlockedTheme | null>(null);
   const [isAchievementOpen, setIsAchievementOpen] = useState(false);
@@ -28,7 +32,15 @@ const useCompletionPage = () => {
   // 작품 완성 API 호출
   const completeMutation = useMutation({
     mutationFn: (id: string) => completeArtwork(id),
-    onSuccess: (response) => {
+    onSuccess: async (response) => {
+      // 수정하기로 진입한 경우 기존 완성작 삭제 → 대표 작품이었으면 새 작품을 대표로 설정
+      if (originalArtworkId) {
+        await deleteArtwork(originalArtworkId);
+        if (isOriginalFeatured && artworkId) {
+          await featureArtwork(artworkId);
+        }
+      }
+
       queryClient.invalidateQueries({ queryKey: ["artworks"] });
       queryClient.invalidateQueries({ queryKey: ["themes"] });
 
