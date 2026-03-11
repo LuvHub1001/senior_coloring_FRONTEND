@@ -2,6 +2,7 @@ import {
   ColoringLoadingSkeleton,
   ColoringPlayHeader,
   ColoringCanvas,
+  ColoringSvgCanvas,
   ColorPaletteBar,
   ColoringToolBar,
   PaletteBottomSheet,
@@ -17,7 +18,9 @@ function ColoringPlayPage() {
     isLoading,
     title,
     imageUrl,
+    isSvgMode,
     canvasRef,
+    svgContainerRef,
     colors,
     selectedColor,
     canUndo,
@@ -30,6 +33,7 @@ function ColoringPlayPage() {
     handleComplete,
     handleSelectColor,
     handleCanvasTap,
+    handleSvgClick,
     handleUndo,
     handleRedo,
     handlePalette,
@@ -51,9 +55,7 @@ function ColoringPlayPage() {
     zoomPercent,
     handleZoomIn,
     handleZoomOut,
-    zoomScale,
-    panX,
-    panY,
+    zoomContainerStyle,
     handlePanStart,
     handlePanMove,
     handlePanEnd,
@@ -77,26 +79,36 @@ function ColoringPlayPage() {
       />
 
       {/* 캔버스 영역 */}
-      <div className="relative flex flex-1 flex-col items-center bg-[#F9FAFB]">
-        {/* 토글 (top 20px) → 간격 56.5px → 캔버스 → 간격 38px → 토스트 */}
+      <div className="relative flex flex-1 flex-col items-center bg-[#F9FAFB] pt-5">
+        {/* 모드 토글 — top 20px */}
         {!isLoading && (
-          <div className="mt-5">
-            <ModeToggle activeMode={activeMode} onModeChange={handleModeChange} />
-          </div>
+          <ModeToggle activeMode={activeMode} onModeChange={handleModeChange} />
         )}
-        <div className="mt-[56.5px]">
-          <ColoringCanvas
-            canvasRef={canvasRef}
-            onCanvasTap={handleCanvasTap}
-            isZoomMode={activeMode === "zoom"}
-            zoomScale={zoomScale}
-            panX={panX}
-            panY={panY}
-            onPanStart={handlePanStart}
-            onPanMove={handlePanMove}
-            onPanEnd={handlePanEnd}
-          />
+
+        {/* 줌/팬 wrapper — 토글 아래 20px 간격 */}
+        <div
+          className="mt-5"
+          style={zoomContainerStyle}
+          onPointerDown={activeMode === "zoom" ? handlePanStart : undefined}
+          onPointerMove={activeMode === "zoom" ? handlePanMove : undefined}
+          onPointerUp={activeMode === "zoom" ? handlePanEnd : undefined}
+          onPointerLeave={activeMode === "zoom" ? handlePanEnd : undefined}
+        >
+          {isSvgMode ? (
+            <ColoringSvgCanvas
+              containerRef={svgContainerRef}
+              onSvgClick={handleSvgClick}
+              isZoomMode={activeMode === "zoom"}
+            />
+          ) : (
+            <ColoringCanvas
+              canvasRef={canvasRef}
+              onCanvasTap={handleCanvasTap}
+              isZoomMode={activeMode === "zoom"}
+            />
+          )}
         </div>
+
         <ZoomToast isVisible={isZoomToastVisible} />
 
         {/* 오버레이: 확대 모드 줌 컨트롤 */}

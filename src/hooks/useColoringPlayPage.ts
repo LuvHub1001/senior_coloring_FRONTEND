@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useDesignDetail } from "@/hooks/useDesigns";
 import { useColoringCanvas } from "@/hooks/useColoringCanvas";
+import { useColoringSvg } from "@/hooks/useColoringSvg";
 import { useArtworkSave } from "@/hooks/useArtworkSave";
 
 // HSL → HEX 변환
@@ -96,19 +97,32 @@ const useColoringPlayPage = () => {
   const imageUrl = locationState.savedImageUrl ?? apiDesign?.imageUrl ?? locationState.imageUrl ?? "";
   const isLoading = !minLoadingDone || isApiLoading;
 
-  // 캔버스 색칠 로직
+  // SVG URL 감지 (.svg 확장자 여부)
+  const isSvgMode = /\.svg(\?|$)/i.test(imageUrl);
+
+  // SVG 패스 기반 색칠 (SVG일 때만 활성)
+  const svgResult = useColoringSvg(isSvgMode ? imageUrl : "", selectedColor);
+
+  // 캔버스 플러드 필 색칠 (비-SVG일 때만 활성)
+  const canvasResult = useColoringCanvas(isSvgMode ? "" : imageUrl, selectedColor);
+
+  // 모드에 따라 통합 인터페이스 선택
   const {
-    canvasRef,
     canUndo,
     canRedo,
     hasColoredAnything,
-    handleCanvasTap,
     handleUndo,
     handleRedo,
     getCanvasDataUrl,
     getCanvasFile,
     getProgress,
-  } = useColoringCanvas(imageUrl, selectedColor);
+  } = isSvgMode ? svgResult : canvasResult;
+
+  // 모드별 전용 ref / 핸들러
+  const canvasRef = canvasResult.canvasRef;
+  const handleCanvasTap = canvasResult.handleCanvasTap;
+  const svgContainerRef = svgResult.containerRef;
+  const handleSvgClick = svgResult.handleSvgClick;
 
   // 작품 생성 및 임시 저장 (이어 그리기 시 기존 artworkId 전달)
   const {
@@ -296,11 +310,23 @@ const useColoringPlayPage = () => {
 
   const zoomScale = zoomPercent / 100;
 
+  // 줌/팬 wrapper 스타일 — 도안 프레임(테두리+그림자) 전체에 적용
+  const zoomContainerStyle: React.CSSProperties = {
+    transform:
+      zoomScale !== 1 || panX !== 0 || panY !== 0
+        ? `scale(${zoomScale}) translate(${panX}px, ${panY}px)`
+        : undefined,
+    transformOrigin: "center center",
+    touchAction: activeMode === "zoom" ? "none" : undefined,
+  };
+
   return {
     isLoading,
     title,
     imageUrl,
+    isSvgMode,
     canvasRef,
+    svgContainerRef,
     colors: DEFAULT_COLORS,
     selectedColor,
     canUndo,
@@ -313,6 +339,7 @@ const useColoringPlayPage = () => {
     handleComplete,
     handleSelectColor,
     handleCanvasTap,
+    handleSvgClick,
     handleUndo,
     handleRedo,
     handlePalette,
@@ -335,6 +362,7 @@ const useColoringPlayPage = () => {
     zoomPercent,
     handleZoomIn,
     handleZoomOut,
+    zoomContainerStyle,
     zoomScale,
     panX,
     panY,
