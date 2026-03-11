@@ -113,8 +113,16 @@ const useColoringBookPage = () => {
     });
   };
 
+  // 전시하기 → 완성 페이지로 이동
   const handleExhibit = () => {
-    // TODO: 전시하기 기능
+    if (!selectedArtwork) return;
+    navigate(`/coloring/${selectedArtwork.designId}/complete`, {
+      state: {
+        completedImageUrl: selectedArtwork.imageUrl,
+        title: selectedArtwork.design.title,
+        artworkId: selectedArtwork.id,
+      },
+    });
   };
 
   const handleToggleMoreMenu = () => {
