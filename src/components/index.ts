@@ -33,6 +33,7 @@ import {
   ModeToggle,
   ZoomToast,
   ZoomControls,
+  ToolSelector,
 } from "@/components/coloringPlay";
 import {
   Confetti,
@@ -71,6 +72,7 @@ export {
   ModeToggle,
   ZoomToast,
   ZoomControls,
+  ToolSelector,
   Confetti,
   CompletionScreen,
   AchievementModal,

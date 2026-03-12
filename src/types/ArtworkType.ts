@@ -9,6 +9,7 @@ export interface Artwork {
   imageUrl: string | null;
   progress: number;
   status: ArtworkStatus;
+  rootArtworkId: string | null;
   createdAt: string;
   updatedAt: string;
   design: Pick<Design, "id" | "title" | "imageUrl">;
@@ -29,6 +30,8 @@ export interface ArtworkCompleteResponse {
   success: boolean;
   data: Artwork & {
     unlockedTheme: UnlockedTheme | null;
+    replacedRoot: boolean;
+    updatedFeatured: boolean;
   };
 }
 

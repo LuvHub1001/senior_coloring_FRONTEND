@@ -7,9 +7,11 @@ import type {
   ArtworkDeleteResponse,
 } from "@/types";
 
-// 색칠 시작 (작품 생성)
-export const createArtwork = async (designId: number): Promise<ArtworkResponse> => {
-  const { data } = await instance.post<ArtworkResponse>("/api/artworks", { designId });
+// 색칠 시작 (작품 생성) — rootArtworkId: 수정하기인 경우 원본 작품 ID
+export const createArtwork = async (designId: number, rootArtworkId?: string): Promise<ArtworkResponse> => {
+  const body: { designId: number; rootArtworkId?: string } = { designId };
+  if (rootArtworkId) body.rootArtworkId = rootArtworkId;
+  const { data } = await instance.post<ArtworkResponse>("/api/artworks", body);
   return data;
 };
 

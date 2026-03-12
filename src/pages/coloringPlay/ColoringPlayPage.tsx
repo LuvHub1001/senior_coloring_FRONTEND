@@ -9,6 +9,7 @@ import {
   ModeToggle,
   ZoomToast,
   ZoomControls,
+  ToolSelector,
 } from "@/components";
 import { useColoringPlayPage } from "@/hooks";
 
@@ -33,7 +34,10 @@ function ColoringPlayPage() {
     handleUndo,
     handleRedo,
     handlePalette,
-    handleGuide,
+    handleResetClick,
+    handleResetConfirm,
+    handleResetCancel,
+    isResetModalOpen,
     handleCollapse,
     isToolBarCollapsed,
     isPaletteOpen,
@@ -45,6 +49,13 @@ function ColoringPlayPage() {
     handleBrightnessChange,
     handlePaletteApply,
     handlePaletteClose,
+    activeTool,
+    isToolSelectorOpen,
+    handleToolChange,
+    handleToolIconClick,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
     activeMode,
     handleModeChange,
     isZoomToastVisible,
@@ -101,9 +112,20 @@ function ColoringPlayPage() {
           <ColoringCanvas
             canvasRef={canvasRef}
             onCanvasTap={handleCanvasTap}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
             isZoomMode={activeMode === "zoom"}
+            activeTool={activeTool}
           />
         </div>
+
+        {/* 도구 선택 패널 — 캔버스 좌측 플로팅 (토글로 열기/닫기) */}
+        {!isLoading && activeMode === "color" && isToolSelectorOpen && (
+          <div className="absolute bottom-[9px] left-5 z-20">
+            <ToolSelector activeTool={activeTool} onToolChange={handleToolChange} />
+          </div>
+        )}
 
         <ZoomToast isVisible={isZoomToastVisible} />
 
@@ -145,7 +167,9 @@ function ColoringPlayPage() {
             <ColorPaletteBar
               colors={colors}
               selectedColor={selectedColor}
+              activeTool={activeTool}
               onSelectColor={handleSelectColor}
+              onToolIconClick={handleToolIconClick}
             />
           </div>
 
@@ -162,7 +186,7 @@ function ColoringPlayPage() {
             onUndo={handleUndo}
             onRedo={handleRedo}
             onPalette={handlePalette}
-            onGuide={handleGuide}
+            onReset={handleResetClick}
             onCollapse={handleCollapse}
           />
         </div>
@@ -172,6 +196,15 @@ function ColoringPlayPage() {
         <SaveConfirmModal
           onConfirm={handleBackConfirm}
           onCancel={handleBackCancel}
+        />
+      )}
+      {/* 리셋 확인 모달 */}
+      {isResetModalOpen && (
+        <SaveConfirmModal
+          title="초기화하시겠어요?"
+          description="지금까지 한 작업이 초기화 됩니다."
+          onConfirm={handleResetConfirm}
+          onCancel={handleResetCancel}
         />
       )}
     </div>

@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from "react";
+import type { ToolType } from "@/types";
 
 // HEX → RGBA 변환
 const hexToRgba = (hex: string): { r: number; g: number; b: number; a: number } => {
@@ -13,6 +14,7 @@ const getLuminance = (r: number, g: number, b: number): number =>
   0.299 * r + 0.587 * g + 0.114 * b;
 
 // 스캔라인 플러드 필 — 원본 도안 기반 경계 감지 + 멀티패스 갭 닫기 + 후처리
+// reusableBuffers: 재사용 가능한 Uint8Array 버퍼 (GC 부담 감소)
 const floodFill = (
   imageData: ImageData,
   originalData: Uint8ClampedArray,
@@ -21,6 +23,7 @@ const floodFill = (
   fillColor: { r: number; g: number; b: number; a: number },
   tolerance: number,
   lineThreshold: number,
+  reusableBuffers?: { visited: Uint8Array; boundary: Uint8Array; closed: Uint8Array },
 ): boolean => {
   const { data, width, height } = imageData;
   const totalPixels = width * height;
@@ -47,21 +50,36 @@ const floodFill = (
     return false;
   }
 
+  // 재사용 버퍼 또는 새로 할당 — 크기가 맞으면 초기화 후 재사용
+  const hardBoundary = (reusableBuffers && reusableBuffers.boundary.length >= totalPixels)
+    ? reusableBuffers.boundary
+    : new Uint8Array(totalPixels);
+  const closedBoundary = (reusableBuffers && reusableBuffers.closed.length >= totalPixels)
+    ? reusableBuffers.closed
+    : new Uint8Array(totalPixels);
+  const visited = (reusableBuffers && reusableBuffers.visited.length >= totalPixels)
+    ? reusableBuffers.visited
+    : new Uint8Array(totalPixels);
+
+  // 버퍼 초기화
+  hardBoundary.fill(0, 0, totalPixels);
+  closedBoundary.fill(0, 0, totalPixels);
+  visited.fill(0, 0, totalPixels);
+
   // 경계 맵 사전 계산 — 원본 도안의 휘도 기반 선 감지
   // 현재 캔버스가 아닌 원본을 참조하므로, 사용자가 칠한 색은 경계로 취급되지 않음
-  const hardBoundary = new Uint8Array(totalPixels);
   for (let i = 0; i < totalPixels; i++) {
     const idx = i * 4;
     const lum = getLuminance(originalData[idx], originalData[idx + 1], originalData[idx + 2]);
     if (lum < lineThreshold) {
       hardBoundary[i] = 1;
+      closedBoundary[i] = 1;
     }
   }
 
   // 경계 맵 보강: 멀티패스 갭 닫기 (최대 3px 틈새까지 처리)
   // 각 패스에서 1px 갭을 닫고, 결과를 다음 패스 입력으로 사용
   const GAP_CLOSE_PASSES = 3;
-  const closedBoundary = new Uint8Array(hardBoundary);
 
   for (let pass = 0; pass < GAP_CLOSE_PASSES; pass++) {
     // 현재 상태를 기준으로 새 갭 감지
@@ -96,8 +114,6 @@ const floodFill = (
 
     if (!changed) break;
   }
-
-  const visited = new Uint8Array(totalPixels);
 
   const canFill = (pixelIdx: number): boolean => {
     if (visited[pixelIdx] || closedBoundary[pixelIdx]) return false;
@@ -261,6 +277,7 @@ const useColoringCanvas = (
   rotationRef?: React.RefObject<number>,
   zoomScaleRef?: React.RefObject<number>,
   originalImageUrl?: string,
+  activeTool: ToolType = "paint",
 ) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const historyRef = useRef<ImageData[]>([]);
@@ -269,6 +286,13 @@ const useColoringCanvas = (
   const originalDataRef = useRef<Uint8ClampedArray | null>(null);
   const [historyVersion, setHistoryVersion] = useState(0);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
+
+  // 붓/지우개 드로잉 상태
+  const isDrawingRef = useRef(false);
+  const lastPosRef = useRef<{ x: number; y: number } | null>(null);
+
+  // floodFill 재사용 버퍼 (GC 부담 감소)
+  const fillBuffersRef = useRef<{ visited: Uint8Array; boundary: Uint8Array; closed: Uint8Array } | null>(null);
 
   const canUndo = historyIndexRef.current > 0;
   const canRedo = historyIndexRef.current < historyRef.current.length - 1;
@@ -347,83 +371,6 @@ const useColoringCanvas = (
     img.src = imageUrl;
   }, [imageUrl, originalImageUrl]);
 
-  // 캔버스 클릭 → 플러드 필
-  const handleCanvasTap = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
-      const canvas = canvasRef.current;
-      if (!canvas || !isImageLoaded) return;
-
-      const ctx = canvas.getContext("2d", { willReadFrequently: true });
-      if (!ctx) return;
-
-      const rect = canvas.getBoundingClientRect();
-      const currentRotation = rotationRef?.current ?? 0;
-      const currentScale = zoomScaleRef?.current ?? 1;
-
-      let x: number;
-      let y: number;
-
-      if (currentRotation === 0 && currentScale === 1) {
-        // 변환 없음 — 기존 방식
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        x = Math.floor((e.clientX - rect.left) * scaleX);
-        y = Math.floor((e.clientY - rect.top) * scaleY);
-      } else {
-        // 회전/확대 적용 — 역변환으로 캔버스 좌표 계산
-        const displayW = CANVAS_DISPLAY_WIDTH;
-        const displayH = canvas.height * (displayW / canvas.width);
-
-        // AABB 중심 = 캔버스 시각적 중심
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
-
-        // 클릭 위치를 중심 기준으로 변환
-        const dx = e.clientX - cx;
-        const dy = e.clientY - cy;
-
-        // 역 회전
-        const rad = -currentRotation * (Math.PI / 180);
-        const rx = dx * Math.cos(rad) - dy * Math.sin(rad);
-        const ry = dx * Math.sin(rad) + dy * Math.cos(rad);
-
-        // 역 스케일 → 캔버스 픽셀 좌표로 변환
-        const ux = rx / currentScale;
-        const uy = ry / currentScale;
-        x = Math.floor((ux / displayW + 0.5) * canvas.width);
-        y = Math.floor((uy / displayH + 0.5) * canvas.height);
-      }
-
-      if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) return;
-
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const originalData = originalDataRef.current;
-      if (!originalData) return;
-
-      const fillColor = hexToRgba(selectedColor);
-      const filled = floodFill(imageData, originalData, x, y, fillColor, FLOOD_FILL_TOLERANCE, LINE_BOUNDARY_THRESHOLD);
-
-      if (filled) {
-        ctx.putImageData(imageData, 0, 0);
-
-        // 현재 위치 이후 히스토리 제거 후 새 상태 추가
-        const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
-        const snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        newHistory.push(snapshot);
-
-        // 히스토리 최대 개수 제한
-        if (newHistory.length > MAX_HISTORY) {
-          newHistory.shift();
-        }
-
-        historyRef.current = newHistory;
-        historyIndexRef.current = newHistory.length - 1;
-        setHistoryVersion((v) => v + 1);
-      }
-    },
-    [selectedColor, isImageLoaded],
-  );
-
   // 실행 취소
   const handleUndo = useCallback(() => {
     if (historyIndexRef.current <= 0) return;
@@ -454,7 +401,24 @@ const useColoringCanvas = (
     setHistoryVersion((v) => v + 1);
   }, []);
 
-  // 색칠 진행률 계산 — 원본 도안과 현재 상태를 비교하여 변경된 픽셀 비율 산출
+  // 리셋: 캔버스를 초기 상태(히스토리 0번)로 되돌림
+  const handleReset = useCallback(() => {
+    if (historyRef.current.length === 0) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return;
+
+    ctx.putImageData(historyRef.current[0], 0, 0);
+    historyRef.current = [historyRef.current[0]];
+    historyIndexRef.current = 0;
+    setHistoryVersion((v) => v + 1);
+  }, []);
+
+  // 색칠 진행률 계산 — 매 4번째 픽셀만 샘플링하여 성능 최적화
+  const PROGRESS_SAMPLE_STEP = 4;
   const getProgress = useCallback((): number => {
     const canvas = canvasRef.current;
     if (!canvas) return 0;
@@ -472,7 +436,7 @@ const useColoringCanvas = (
 
     const PIXEL_CHANGE_THRESHOLD = 30;
 
-    for (let i = 0; i < total; i++) {
+    for (let i = 0; i < total; i += PROGRESS_SAMPLE_STEP) {
       const idx = i * 4;
 
       // 원본 도안에서 윤곽선(어두운 픽셀)은 색칠 대상이 아니므로 제외
@@ -497,6 +461,257 @@ const useColoringCanvas = (
     if (fillable === 0) return 0;
     return Math.min(Math.round((colored / fillable) * 100), 100);
   }, []);
+
+  // 포인터 이벤트 좌표 → 캔버스 픽셀 좌표 변환
+  const getCanvasCoords = useCallback(
+    (clientX: number, clientY: number): { x: number; y: number } | null => {
+      const canvas = canvasRef.current;
+      if (!canvas) return null;
+
+      const rect = canvas.getBoundingClientRect();
+      const currentRotation = rotationRef?.current ?? 0;
+      const currentScale = zoomScaleRef?.current ?? 1;
+
+      let x: number;
+      let y: number;
+
+      if (currentRotation === 0 && currentScale === 1) {
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        x = Math.floor((clientX - rect.left) * scaleX);
+        y = Math.floor((clientY - rect.top) * scaleY);
+      } else {
+        const displayW = CANVAS_DISPLAY_WIDTH;
+        const displayH = canvas.height * (displayW / canvas.width);
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const dx = clientX - cx;
+        const dy = clientY - cy;
+        const rad = -currentRotation * (Math.PI / 180);
+        const rx = dx * Math.cos(rad) - dy * Math.sin(rad);
+        const ry = dx * Math.sin(rad) + dy * Math.cos(rad);
+        const ux = rx / currentScale;
+        const uy = ry / currentScale;
+        x = Math.floor((ux / displayW + 0.5) * canvas.width);
+        y = Math.floor((uy / displayH + 0.5) * canvas.height);
+      }
+
+      if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) return null;
+      return { x, y };
+    },
+    [],
+  );
+
+  // 붓/지우개 브러시 크기 (캔버스 내부 픽셀 기준)
+  const BRUSH_RADIUS = 8;
+
+  // 두 점 사이를 보간하며 원형 브러시 스트로크 그리기
+  // bounding box 기반으로 필요한 영역만 getImageData/putImageData 수행
+  const drawStroke = useCallback(
+    (
+      ctx: CanvasRenderingContext2D,
+      from: { x: number; y: number },
+      to: { x: number; y: number },
+      tool: ToolType,
+    ) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const origData = originalDataRef.current;
+      if (!origData) return;
+
+      const canvasW = canvas.width;
+      const canvasH = canvas.height;
+
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const steps = Math.max(Math.ceil(dist / 2), 1);
+
+      // 스트로크 영역의 bounding box 계산
+      const minX = Math.max(0, Math.min(from.x, to.x) - BRUSH_RADIUS);
+      const minY = Math.max(0, Math.min(from.y, to.y) - BRUSH_RADIUS);
+      const maxX = Math.min(canvasW - 1, Math.max(from.x, to.x) + BRUSH_RADIUS);
+      const maxY = Math.min(canvasH - 1, Math.max(from.y, to.y) + BRUSH_RADIUS);
+      const regionW = maxX - minX + 1;
+      const regionH = maxY - minY + 1;
+
+      if (regionW <= 0 || regionH <= 0) return;
+
+      const imageData = ctx.getImageData(minX, minY, regionW, regionH);
+      const { data } = imageData;
+
+      if (tool === "brush") {
+        // 붓: 선택한 색상으로 그리기 (원본 도안의 선은 보존)
+        const color = hexToRgba(selectedColor);
+
+        for (let s = 0; s <= steps; s++) {
+          const t = steps === 0 ? 0 : s / steps;
+          const cx = Math.round(from.x + dx * t);
+          const cy = Math.round(from.y + dy * t);
+
+          for (let ry = -BRUSH_RADIUS; ry <= BRUSH_RADIUS; ry++) {
+            for (let rx = -BRUSH_RADIUS; rx <= BRUSH_RADIUS; rx++) {
+              if (rx * rx + ry * ry > BRUSH_RADIUS * BRUSH_RADIUS) continue;
+              const px = cx + rx;
+              const py = cy + ry;
+              if (px < minX || px > maxX || py < minY || py > maxY) continue;
+              // 원본 도안에서 경계선(어두운 픽셀)이면 건너뜀
+              const origIdx = (py * canvasW + px) * 4;
+              const lum = getLuminance(origData[origIdx], origData[origIdx + 1], origData[origIdx + 2]);
+              if (lum < LINE_BOUNDARY_THRESHOLD) continue;
+              // 로컬 영역 좌표로 변환
+              const localIdx = ((py - minY) * regionW + (px - minX)) * 4;
+              data[localIdx] = color.r;
+              data[localIdx + 1] = color.g;
+              data[localIdx + 2] = color.b;
+              data[localIdx + 3] = color.a;
+            }
+          }
+        }
+      } else if (tool === "eraser") {
+        // 지우개: 원본 도안 픽셀로 복원
+        for (let s = 0; s <= steps; s++) {
+          const t = steps === 0 ? 0 : s / steps;
+          const cx = Math.round(from.x + dx * t);
+          const cy = Math.round(from.y + dy * t);
+
+          for (let ry = -BRUSH_RADIUS; ry <= BRUSH_RADIUS; ry++) {
+            for (let rx = -BRUSH_RADIUS; rx <= BRUSH_RADIUS; rx++) {
+              if (rx * rx + ry * ry > BRUSH_RADIUS * BRUSH_RADIUS) continue;
+              const px = cx + rx;
+              const py = cy + ry;
+              if (px < minX || px > maxX || py < minY || py > maxY) continue;
+              const origIdx = (py * canvasW + px) * 4;
+              const localIdx = ((py - minY) * regionW + (px - minX)) * 4;
+              data[localIdx] = origData[origIdx];
+              data[localIdx + 1] = origData[origIdx + 1];
+              data[localIdx + 2] = origData[origIdx + 2];
+              data[localIdx + 3] = origData[origIdx + 3];
+            }
+          }
+        }
+      }
+
+      ctx.putImageData(imageData, minX, minY);
+    },
+    [selectedColor],
+  );
+
+  // 히스토리 스냅샷 저장 (붓/지우개 스트로크 완료 시)
+  const saveSnapshot = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return;
+
+    const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
+    const snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    newHistory.push(snapshot);
+
+    if (newHistory.length > MAX_HISTORY) {
+      newHistory.shift();
+    }
+
+    historyRef.current = newHistory;
+    historyIndexRef.current = newHistory.length - 1;
+    setHistoryVersion((v) => v + 1);
+  }, []);
+
+  // 캔버스 클릭 → 플러드 필 (페인트 도구)
+  const handleCanvasTap = useCallback(
+    (e: React.MouseEvent<HTMLCanvasElement>) => {
+      if (activeTool !== "paint") return;
+
+      const canvas = canvasRef.current;
+      if (!canvas || !isImageLoaded) return;
+
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      if (!ctx) return;
+
+      const coords = getCanvasCoords(e.clientX, e.clientY);
+      if (!coords) return;
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const originalData = originalDataRef.current;
+      if (!originalData) return;
+
+      const fillColor = hexToRgba(selectedColor);
+      // 재사용 버퍼 크기 확인 및 필요 시 재할당
+      const totalPixels = canvas.width * canvas.height;
+      if (!fillBuffersRef.current || fillBuffersRef.current.visited.length < totalPixels) {
+        fillBuffersRef.current = {
+          visited: new Uint8Array(totalPixels),
+          boundary: new Uint8Array(totalPixels),
+          closed: new Uint8Array(totalPixels),
+        };
+      }
+
+      const filled = floodFill(imageData, originalData, coords.x, coords.y, fillColor, FLOOD_FILL_TOLERANCE, LINE_BOUNDARY_THRESHOLD, fillBuffersRef.current);
+
+      if (filled) {
+        ctx.putImageData(imageData, 0, 0);
+        saveSnapshot();
+      }
+    },
+    [selectedColor, isImageLoaded, activeTool, getCanvasCoords, saveSnapshot],
+  );
+
+  // 붓/지우개 포인터 이벤트 핸들러
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent<HTMLCanvasElement>) => {
+      if (activeTool === "paint") return;
+      if (!isImageLoaded) return;
+
+      const coords = getCanvasCoords(e.clientX, e.clientY);
+      if (!coords) return;
+
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      if (!ctx) return;
+
+      isDrawingRef.current = true;
+      lastPosRef.current = coords;
+
+      // 첫 점 찍기
+      drawStroke(ctx, coords, coords, activeTool);
+
+      // 포인터 캡처로 캔버스 밖 이동도 추적
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    },
+    [activeTool, isImageLoaded, getCanvasCoords, drawStroke],
+  );
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent<HTMLCanvasElement>) => {
+      if (!isDrawingRef.current || !lastPosRef.current) return;
+      if (activeTool === "paint") return;
+
+      const coords = getCanvasCoords(e.clientX, e.clientY);
+      if (!coords) return;
+
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      if (!ctx) return;
+
+      drawStroke(ctx, lastPosRef.current, coords, activeTool);
+      lastPosRef.current = coords;
+    },
+    [activeTool, getCanvasCoords, drawStroke],
+  );
+
+  const handlePointerUp = useCallback(() => {
+    if (!isDrawingRef.current) return;
+
+    isDrawingRef.current = false;
+    lastPosRef.current = null;
+
+    // 스트로크 완료 후 히스토리에 저장
+    saveSnapshot();
+  }, [saveSnapshot]);
 
   // 현재 캔버스를 이미지 데이터 URL로 내보내기 (완성 화면용)
   const getCanvasDataUrl = useCallback((): string => {
@@ -528,8 +743,12 @@ const useColoringCanvas = (
     canRedo,
     hasColoredAnything,
     handleCanvasTap,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
     handleUndo,
     handleRedo,
+    handleReset,
     getCanvasDataUrl,
     getCanvasFile,
     getProgress,

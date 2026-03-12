@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { completeArtwork, deleteArtwork, featureArtwork } from "@/apis";
+import { completeArtwork } from "@/apis";
 import { useShare } from "@/hooks/useShare";
 import goldFrame from "@images/home/gold_frame.svg";
 import type { UnlockedTheme } from "@/types";
@@ -10,8 +10,6 @@ interface CompletionLocationState {
   completedImageUrl?: string;
   title?: string;
   artworkId?: string;
-  originalArtworkId?: string;
-  isOriginalFeatured?: boolean;
 }
 
 const useCompletionPage = () => {
@@ -23,8 +21,6 @@ const useCompletionPage = () => {
   const completedImageUrl = locationState.completedImageUrl ?? "";
   const title = locationState.title ?? "작품";
   const artworkId = locationState.artworkId ?? "";
-  const originalArtworkId = locationState.originalArtworkId;
-  const isOriginalFeatured = locationState.isOriginalFeatured ?? false;
 
   const { handleShare: shareImage, isShareToastVisible, shareToastMessage } = useShare();
 
@@ -33,18 +29,10 @@ const useCompletionPage = () => {
   // 완성 후 홈 이동 대기 여부 (모달 닫은 뒤 이동하기 위함)
   const [pendingNavigate, setPendingNavigate] = useState(false);
 
-  // 작품 완성 API 호출
+  // 작품 완성 API 호출 — 원본 삭제/피처드 교체는 백엔드에서 자동 처리
   const completeMutation = useMutation({
     mutationFn: (id: string) => completeArtwork(id),
     onSuccess: async (response) => {
-      // 수정하기로 진입한 경우 기존 완성작 삭제 → 대표 작품이었으면 새 작품을 대표로 설정
-      if (originalArtworkId) {
-        await deleteArtwork(originalArtworkId);
-        if (isOriginalFeatured && artworkId) {
-          await featureArtwork(artworkId);
-        }
-      }
-
       queryClient.invalidateQueries({ queryKey: ["artworks"] });
       queryClient.invalidateQueries({ queryKey: ["themes"] });
       queryClient.invalidateQueries({ queryKey: ["userProfile"] });

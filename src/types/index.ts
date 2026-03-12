@@ -30,3 +30,4 @@ export type {
   ThemeSelectRequest,
   ThemeSelectResponse,
 } from "./ThemeType";
+export type { ToolType } from "./ColoringPlayType";

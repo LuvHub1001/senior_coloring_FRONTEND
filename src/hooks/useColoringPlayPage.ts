@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useDesignDetail } from "@/hooks/useDesigns";
 import { useColoringCanvas } from "@/hooks/useColoringCanvas";
 import { useArtworkSave } from "@/hooks/useArtworkSave";
+import type { ToolType } from "@/types";
 
 // HSL → HEX 변환
 const hslToHex = (h: number, s: number, l: number): string => {
@@ -61,8 +62,7 @@ interface LocationState {
   title?: string;
   artworkId?: string;
   savedImageUrl?: string;
-  originalArtworkId?: string;
-  isOriginalFeatured?: boolean;
+  rootArtworkId?: string;
 }
 
 const useColoringPlayPage = () => {
@@ -79,6 +79,10 @@ const useColoringPlayPage = () => {
   const [isToolBarCollapsed, setIsToolBarCollapsed] = useState(false);
   const [huePercent, setHuePercent] = useState(0);
   const [brightnessPercent, setBrightnessPercent] = useState(50);
+
+  // 도구 선택 (페인트 / 붓 / 지우개)
+  const [activeTool, setActiveTool] = useState<ToolType>("paint");
+  const [isToolSelectorOpen, setIsToolSelectorOpen] = useState(false);
 
   // 모드 토글 (색칠 / 확대)
   const [activeMode, setActiveMode] = useState<"color" | "zoom">("color");
@@ -118,12 +122,16 @@ const useColoringPlayPage = () => {
     canRedo,
     hasColoredAnything,
     handleCanvasTap,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
     handleUndo,
     handleRedo,
+    handleReset,
     getCanvasDataUrl,
     getCanvasFile,
     getProgress,
-  } = useColoringCanvas(imageUrl, selectedColor, rotationRef, zoomScaleRef, originalImageUrl);
+  } = useColoringCanvas(imageUrl, selectedColor, rotationRef, zoomScaleRef, originalImageUrl, activeTool);
 
   // 작품 생성 및 임시 저장 (이어 그리기 시 기존 artworkId 전달)
   const {
@@ -131,7 +139,7 @@ const useColoringPlayPage = () => {
     handleCreateArtwork,
     handleSaveArtwork,
     isSaving,
-  } = useArtworkSave(id ?? "", locationState.artworkId);
+  } = useArtworkSave(id ?? "", locationState.artworkId, locationState.rootArtworkId);
 
   // 이어 그리기(savedImageUrl 존재)면 이미 색칠된 상태이므로 완성 가능
   // artworkId가 존재해야 완성 처리가 가능 (서버에 작품이 생성된 이후)
@@ -165,6 +173,7 @@ const useColoringPlayPage = () => {
   }, [isLoading, artworkId, id, hasColoredAnything, handleCreateArtwork]);
 
   const [isBackModalOpen, setIsBackModalOpen] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
 
   // 뒤로가기 버튼 → 이번 세션에서 색칠한 게 있으면 모달, 없으면 바로 이동
   const handleBack = () => {
@@ -199,8 +208,6 @@ const useColoringPlayPage = () => {
         completedImageUrl,
         title,
         artworkId: resolvedId,
-        originalArtworkId: locationState.originalArtworkId,
-        isOriginalFeatured: locationState.isOriginalFeatured,
       },
     });
   };
@@ -247,13 +254,39 @@ const useColoringPlayPage = () => {
     setIsPaletteOpen(false);
   };
 
-  const handleGuide = () => {
-    // 추후 안내 모달 표시
-  };
+
+  const handleToolChange = useCallback((tool: ToolType) => {
+    setActiveTool(tool);
+    setIsToolSelectorOpen(false);
+  }, []);
+
+  const handleToolIconClick = useCallback(() => {
+    setIsToolSelectorOpen((prev) => !prev);
+  }, []);
 
   const handleCollapse = () => {
     setIsToolBarCollapsed((prev) => !prev);
+    // 토글 후 화면 바닥으로 스크롤 — 하단 도구 영역이 바로 보이도록
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    });
   };
+
+  // 리셋 버튼 → 색칠한 게 있으면 확인 모달, 없으면 무시
+  const handleResetClick = useCallback(() => {
+    if (hasColoredAnything) {
+      setIsResetModalOpen(true);
+    }
+  }, [hasColoredAnything]);
+
+  const handleResetConfirm = useCallback(() => {
+    handleReset();
+    setIsResetModalOpen(false);
+  }, [handleReset]);
+
+  const handleResetCancel = useCallback(() => {
+    setIsResetModalOpen(false);
+  }, []);
 
   // 모드 전환 — 확대 모드 진입 시 토스트 3초 노출, 색칠 모드 복귀 시 줌/팬 초기화
   const handleModeChange = useCallback((mode: "color" | "zoom") => {
@@ -299,19 +332,25 @@ const useColoringPlayPage = () => {
     setZoomPercent((prev) => Math.max(prev - ZOOM_STEP, ZOOM_MIN));
   }, []);
 
+  // panX/panY의 최신 값을 ref로 유지 — handleDragStart 의존성 제거
+  const panXRef = useRef(panX);
+  const panYRef = useRef(panY);
+  panXRef.current = panX;
+  panYRef.current = panY;
+
   // 드래그 핸들러 — 확대 모드에서 캔버스 패닝 (드래그 이동)
   const handleDragStart = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       isDraggingRef.current = true;
       dragStartXRef.current = e.clientX;
       dragStartYRef.current = e.clientY;
-      panStartXRef.current = panX;
-      panStartYRef.current = panY;
+      panStartXRef.current = panXRef.current;
+      panStartYRef.current = panYRef.current;
       if (e.currentTarget instanceof HTMLElement) {
         e.currentTarget.setPointerCapture(e.pointerId);
       }
     },
-    [panX, panY],
+    [],
   );
 
   const handleDragMove = useCallback(
@@ -396,7 +435,10 @@ const useColoringPlayPage = () => {
     handleUndo,
     handleRedo,
     handlePalette,
-    handleGuide,
+    handleResetClick,
+    handleResetConfirm,
+    handleResetCancel,
+    isResetModalOpen,
     handleCollapse,
     isToolBarCollapsed,
     isPaletteOpen,
@@ -409,6 +451,13 @@ const useColoringPlayPage = () => {
     handlePaletteApply,
     handlePaletteClose,
     isSaving,
+    activeTool,
+    isToolSelectorOpen,
+    handleToolChange,
+    handleToolIconClick,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
     activeMode,
     handleModeChange,
     isZoomToastVisible,

@@ -2,16 +2,18 @@ import { useState, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createArtwork, saveArtwork } from "@/apis";
 
-// 작품 생성 및 임시 저장 관리 (initialArtworkId: 이어 그리기 시 기존 작품 ID)
-const useArtworkSave = (designId: string, initialArtworkId?: string) => {
+// 작품 생성 및 임시 저장 관리
+// initialArtworkId: 이어 그리기 시 기존 작품 ID
+// rootArtworkId: 수정하기 시 원본 작품 ID (백엔드에서 최상위 원본 자동 추적)
+const useArtworkSave = (designId: string, initialArtworkId?: string, rootArtworkId?: string) => {
   const queryClient = useQueryClient();
   const [artworkId, setArtworkId] = useState<string | null>(initialArtworkId ?? null);
   // 작품 생성 Promise를 보관하여 저장 시 생성 완료를 대기할 수 있도록 함
   const createPromiseRef = useRef<Promise<string> | null>(null);
 
-  // 작품 생성 mutation
+  // 작품 생성 mutation — 수정하기인 경우 rootArtworkId 함께 전달
   const createMutation = useMutation({
-    mutationFn: (id: number) => createArtwork(id),
+    mutationFn: (id: number) => createArtwork(id, rootArtworkId),
     onSuccess: (response) => {
       setArtworkId(response.data.id);
     },

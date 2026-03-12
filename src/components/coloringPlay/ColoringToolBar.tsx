@@ -7,7 +7,7 @@ interface ColoringToolBarProps {
   onUndo: () => void;
   onRedo: () => void;
   onPalette: () => void;
-  onGuide: () => void;
+  onReset: () => void;
   onCollapse: () => void;
 }
 
@@ -20,7 +20,7 @@ function ColoringToolBar({
   onUndo,
   onRedo,
   onPalette,
-  onGuide,
+  onReset,
   onCollapse,
 }: ColoringToolBarProps) {
   return (
@@ -90,15 +90,14 @@ function ColoringToolBar({
         />
       )}
 
-      {/* 안내 */}
+      {/* 리셋 */}
       <ToolButton
-        label="안내"
-        onClick={onGuide}
+        label="초기화"
+        onClick={onReset}
         icon={
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="10" cy="10" r="8.33" stroke="#6B7684" strokeWidth="1.5" />
-            <path d="M10 9.17V14.17" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" />
-            <circle cx="10" cy="6.67" r="0.83" fill="#6B7684" />
+            <path d="M2.5 2.5V7.5H7.5" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M4.17 12.5C4.7 14.93 6.83 16.67 9.33 16.67C12.28 16.67 14.67 14.28 14.67 11.33C14.67 8.38 12.28 6 9.33 6C7.17 6 5.28 7.25 4.42 9.08L2.5 7.5" stroke="#6B7684" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         }
       />

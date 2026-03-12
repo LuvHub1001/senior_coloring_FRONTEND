@@ -9,6 +9,7 @@ import { SaveConfirmModal } from "@/components/coloringPlay/SaveConfirmModal";
 import { ModeToggle } from "@/components/coloringPlay/ModeToggle";
 import { ZoomToast } from "@/components/coloringPlay/ZoomToast";
 import { ZoomControls } from "@/components/coloringPlay/ZoomControls";
+import { ToolSelector } from "@/components/coloringPlay/ToolSelector";
 
 export {
   ColoringLoadingSkeleton,
@@ -21,4 +22,5 @@ export {
   ModeToggle,
   ZoomToast,
   ZoomControls,
+  ToolSelector,
 };
