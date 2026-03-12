@@ -35,24 +35,10 @@ const useColoringBookPage = () => {
     queryFn: () => getArtworks("IN_PROGRESS"),
   });
 
-  // 같은 도안은 가장 최근 작품만 표시 (진행률 0%는 제외)
+  // 진행중인 작품 목록 (진행률 0%는 제외, 같은 도안도 별도 표시)
   const inProgressArtworks = useMemo(
     () =>
-      (artworksData?.data ?? [])
-        .filter((artwork) => artwork.progress > 0)
-        .reduce<Artwork[]>((acc, artwork) => {
-          const existingIndex = acc.findIndex(
-            (a) => a.designId === artwork.designId,
-          );
-          if (existingIndex === -1) {
-            acc.push(artwork);
-          } else if (
-            new Date(artwork.updatedAt) > new Date(acc[existingIndex].updatedAt)
-          ) {
-            acc[existingIndex] = artwork;
-          }
-          return acc;
-        }, []),
+      (artworksData?.data ?? []).filter((artwork) => artwork.progress > 0),
     [artworksData],
   );
 
@@ -92,7 +78,7 @@ const useColoringBookPage = () => {
   );
 
   const handleBack = () => {
-    navigate(-1);
+    navigate("/home");
   };
 
   const handleCategorySelect = (category: string) => {

@@ -86,11 +86,14 @@ const useColoringPlayPage = () => {
   const [zoomPercent, setZoomPercent] = useState(100);
   const zoomToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 회전(드래그) 상태
-  const [rotation, setRotation] = useState(0);
+  // 패닝(드래그 이동) 상태
+  const [panX, setPanX] = useState(0);
+  const [panY, setPanY] = useState(0);
   const isDraggingRef = useRef(false);
   const dragStartXRef = useRef(0);
-  const rotationStartRef = useRef(0);
+  const dragStartYRef = useRef(0);
+  const panStartXRef = useRef(0);
+  const panStartYRef = useRef(0);
 
   // 핀치 줌 상태
   const isPinchingRef = useRef(false);
@@ -104,6 +107,8 @@ const useColoringPlayPage = () => {
   const title = apiDesign?.title ?? locationState.title ?? "도안";
   // 저장된 이미지가 있으면 (이어 그리기) 그걸 우선 사용
   const imageUrl = locationState.savedImageUrl ?? apiDesign?.imageUrl ?? locationState.imageUrl ?? "";
+  // 원본 도안 URL — 경계선 감지에 항상 깨끗한 도안 사용 (이어 그리기 시에도)
+  const originalImageUrl = apiDesign?.imageUrl ?? locationState.imageUrl ?? "";
   const isLoading = !minLoadingDone || isApiLoading;
 
   // 모든 이미지(SVG 포함)를 캔버스 래스터화 후 flood fill로 색칠
@@ -118,7 +123,7 @@ const useColoringPlayPage = () => {
     getCanvasDataUrl,
     getCanvasFile,
     getProgress,
-  } = useColoringCanvas(imageUrl, selectedColor, rotationRef, zoomScaleRef);
+  } = useColoringCanvas(imageUrl, selectedColor, rotationRef, zoomScaleRef, originalImageUrl);
 
   // 작품 생성 및 임시 저장 (이어 그리기 시 기존 artworkId 전달)
   const {
@@ -143,9 +148,10 @@ const useColoringPlayPage = () => {
   }, []);
 
   // ref 동기화 — 캔버스 탭 좌표 역변환에 사용
-  useEffect(() => {
-    rotationRef.current = rotation;
-  }, [rotation]);
+  // 기울이기 비활성화: rotationRef는 항상 0
+  // useEffect(() => {
+  //   rotationRef.current = rotation;
+  // }, [rotation]);
 
   useEffect(() => {
     zoomScaleRef.current = zoomPercent / 100;
@@ -169,12 +175,12 @@ const useColoringPlayPage = () => {
     }
   };
 
-  // 모달에서 "확인" → 임시 저장 후 이동
+  // 모달에서 "확인" → 임시 저장 후 목록 페이지로 이동 (스크롤 최상단)
   const handleBackConfirm = async () => {
-    if (hasColoredAnything && artworkId) {
+    if (hasColoredAnything) {
       await handleSaveArtwork(getCanvasFile, getProgress);
     }
-    navigate(-1);
+    navigate("/coloring", { replace: true });
   };
 
   // 모달에서 "취소" → 모달 닫고 계속 색칠
@@ -183,18 +189,16 @@ const useColoringPlayPage = () => {
   };
 
   const handleComplete = async () => {
-    // 작품이 생성되지 않았으면 완성 불가
-    if (!artworkId) return;
-
-    // 완성 전 최종 저장
-    await handleSaveArtwork(getCanvasFile, getProgress);
+    // 완성 전 최종 저장 (작품 생성 완료 대기 포함)
+    const resolvedId = await handleSaveArtwork(getCanvasFile, getProgress);
+    if (!resolvedId) return;
 
     const completedImageUrl = getCanvasDataUrl();
     navigate(`/coloring/${id}/complete`, {
       state: {
         completedImageUrl,
         title,
-        artworkId,
+        artworkId: resolvedId,
         originalArtworkId: locationState.originalArtworkId,
         isOriginalFeatured: locationState.isOriginalFeatured,
       },
@@ -295,24 +299,28 @@ const useColoringPlayPage = () => {
     setZoomPercent((prev) => Math.max(prev - ZOOM_STEP, ZOOM_MIN));
   }, []);
 
-  // 드래그 핸들러 — 확대 모드에서 도안 회전 (수평 드래그 → 회전)
+  // 드래그 핸들러 — 확대 모드에서 캔버스 패닝 (드래그 이동)
   const handleDragStart = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       isDraggingRef.current = true;
       dragStartXRef.current = e.clientX;
-      rotationStartRef.current = rotation;
+      dragStartYRef.current = e.clientY;
+      panStartXRef.current = panX;
+      panStartYRef.current = panY;
       if (e.currentTarget instanceof HTMLElement) {
         e.currentTarget.setPointerCapture(e.pointerId);
       }
     },
-    [rotation],
+    [panX, panY],
   );
 
   const handleDragMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       if (!isDraggingRef.current || isPinchingRef.current) return;
       const dx = e.clientX - dragStartXRef.current;
-      setRotation(rotationStartRef.current + dx * 0.5);
+      const dy = e.clientY - dragStartYRef.current;
+      setPanX(panStartXRef.current + dx);
+      setPanY(panStartYRef.current + dy);
     },
     [],
   );
@@ -358,12 +366,12 @@ const useColoringPlayPage = () => {
 
   const zoomScale = zoomPercent / 100;
 
-  // 줌/회전 wrapper 스타일 — 도안 프레임(테두리+그림자) 전체에 적용
+  // 줌 wrapper 스타일 — 도안 프레임(테두리+그림자) 전체에 적용
+  const hasTransform = zoomScale !== 1 || panX !== 0 || panY !== 0;
   const zoomContainerStyle: React.CSSProperties = {
-    transform:
-      zoomScale !== 1 || rotation !== 0
-        ? `scale(${zoomScale}) rotate(${rotation}deg)`
-        : undefined,
+    transform: hasTransform
+      ? `translate(${panX}px, ${panY}px) scale(${zoomScale})`
+      : undefined,
     transformOrigin: "center center",
     touchAction: activeMode === "zoom" ? "none" : undefined,
   };
@@ -408,7 +416,6 @@ const useColoringPlayPage = () => {
     handleZoomIn,
     handleZoomOut,
     zoomContainerStyle,
-    rotation,
     handleDragStart,
     handleDragMove,
     handleDragEnd,

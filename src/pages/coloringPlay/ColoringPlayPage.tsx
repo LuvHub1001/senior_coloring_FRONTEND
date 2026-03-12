@@ -78,13 +78,15 @@ function ColoringPlayPage() {
       />
 
       {/* 캔버스 영역 */}
-      <div className="relative flex flex-1 flex-col items-center bg-[#F9FAFB] pt-5">
-        {/* 모드 토글 — top 20px */}
+      <div className="relative flex flex-1 flex-col items-center overflow-hidden bg-[#F9FAFB] pt-5">
+        {/* 모드 토글 — 확대 시에도 항상 보이도록 z-20 */}
         {!isLoading && (
-          <ModeToggle activeMode={activeMode} onModeChange={handleModeChange} />
+          <div className="relative z-20">
+            <ModeToggle activeMode={activeMode} onModeChange={handleModeChange} />
+          </div>
         )}
 
-        {/* 줌/팬 wrapper — 토글 아래 20px 간격 */}
+        {/* 줌 wrapper — 토글 아래 20px 간격 */}
         <div
           className="mt-5"
           style={zoomContainerStyle}

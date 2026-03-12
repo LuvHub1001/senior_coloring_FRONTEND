@@ -12,14 +12,14 @@ function ZoomControls({
   return (
     <>
       {/* 줌 퍼센트 표시 (좌측 top-5 left-5) */}
-      <div className="absolute left-5 top-5 z-10 flex h-[38px] items-center justify-center rounded-full bg-white px-[16px] shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
+      <div className="absolute left-5 top-5 z-20 flex h-[38px] items-center justify-center rounded-full bg-white px-[16px] shadow-[0px_4px_6px_rgba(0,0,0,0.1)]">
         <p className="whitespace-nowrap text-[15px] font-[500] leading-[22.5px] tracking-[-0.075px] text-[#364153]">
           {zoomPercent}%
         </p>
       </div>
 
       {/* 줌 인/아웃 버튼 (우측 top-5 right-5) */}
-      <div className="absolute right-5 top-5 z-10 flex flex-col gap-[8px]">
+      <div className="absolute right-5 top-5 z-20 flex flex-col gap-[8px]">
         <button
           type="button"
           onClick={onZoomIn}

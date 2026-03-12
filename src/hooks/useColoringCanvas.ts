@@ -37,13 +37,13 @@ const floodFill = (
     return false;
   }
 
-  // 이미 같은 색이면 스킵
-  if (
-    Math.abs(startR - fillColor.r) <= tolerance &&
-    Math.abs(startG - fillColor.g) <= tolerance &&
-    Math.abs(startB - fillColor.b) <= tolerance &&
-    Math.abs(startA - fillColor.a) <= tolerance
-  ) {
+  // 이미 같은 색이면 스킵 — 채널별이 아닌 총 색차로 판정하여
+  // 후처리로 블렌딩된 픽셀에서 다른 색을 "같은 색"으로 오판하는 것을 방지
+  const sameDiff =
+    Math.abs(startR - fillColor.r) +
+    Math.abs(startG - fillColor.g) +
+    Math.abs(startB - fillColor.b);
+  if (sameDiff <= 30) {
     return false;
   }
 
@@ -102,13 +102,29 @@ const floodFill = (
   const canFill = (pixelIdx: number): boolean => {
     if (visited[pixelIdx] || closedBoundary[pixelIdx]) return false;
     const idx = pixelIdx * 4;
-    // 시작 픽셀과 색상 유사성 확인
-    return (
+
+    // 조건 1: 시작 픽셀과 색상이 유사하면 채우기 가능 (첫 색칠 + 재색칠)
+    if (
       Math.abs(data[idx] - startR) <= tolerance &&
       Math.abs(data[idx + 1] - startG) <= tolerance &&
       Math.abs(data[idx + 2] - startB) <= tolerance &&
       Math.abs(data[idx + 3] - startA) <= tolerance
+    ) {
+      return true;
+    }
+
+    // 조건 2: 원본 비경계 픽셀이고 이미 색칠된 상태면 채우기 가능 (재색칠)
+    const origLum = getLuminance(
+      originalData[idx], originalData[idx + 1], originalData[idx + 2],
     );
+    if (origLum < lineThreshold) return false;
+
+    const diffFromOriginal =
+      Math.abs(data[idx] - originalData[idx]) > tolerance ||
+      Math.abs(data[idx + 1] - originalData[idx + 1]) > tolerance ||
+      Math.abs(data[idx + 2] - originalData[idx + 2]) > tolerance;
+
+    return diffFromOriginal;
   };
 
   const fillPixel = (pixelIdx: number) => {
@@ -244,10 +260,13 @@ const useColoringCanvas = (
   selectedColor: string,
   rotationRef?: React.RefObject<number>,
   zoomScaleRef?: React.RefObject<number>,
+  originalImageUrl?: string,
 ) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const historyRef = useRef<ImageData[]>([]);
   const historyIndexRef = useRef(-1);
+  // 원본 도안 데이터 — 경계선 감지 전용 (이어 그리기 시에도 깨끗한 도안 유지)
+  const originalDataRef = useRef<Uint8ClampedArray | null>(null);
   const [historyVersion, setHistoryVersion] = useState(0);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
@@ -288,7 +307,37 @@ const useColoringCanvas = (
       historyRef.current = [initialData];
       historyIndexRef.current = 0;
       setHistoryVersion((v) => v + 1);
-      setIsImageLoaded(true);
+
+      // 원본 도안 이미지를 별도로 로드하여 경계선 감지에 사용
+      const origUrl = originalImageUrl ?? imageUrl;
+      if (origUrl !== imageUrl && originalImageUrl) {
+        const origImg = new Image();
+        origImg.crossOrigin = "anonymous";
+        origImg.onload = () => {
+          // 오프스크린 캔버스에 원본 도안 렌더링
+          const offscreen = document.createElement("canvas");
+          offscreen.width = canvasW;
+          offscreen.height = canvasH;
+          const offCtx = offscreen.getContext("2d", { willReadFrequently: true });
+          if (offCtx) {
+            offCtx.fillStyle = "#FFFFFF";
+            offCtx.fillRect(0, 0, canvasW, canvasH);
+            offCtx.drawImage(origImg, 0, 0, canvasW, canvasH);
+            originalDataRef.current = offCtx.getImageData(0, 0, canvasW, canvasH).data;
+          }
+          setIsImageLoaded(true);
+        };
+        origImg.onerror = () => {
+          // 원본 로드 실패 시 현재 이미지를 원본으로 사용
+          originalDataRef.current = initialData.data;
+          setIsImageLoaded(true);
+        };
+        origImg.src = originalImageUrl;
+      } else {
+        // 새로 시작하는 경우: 현재 이미지가 곧 원본
+        originalDataRef.current = initialData.data;
+        setIsImageLoaded(true);
+      }
     };
 
     img.onerror = () => {
@@ -296,7 +345,7 @@ const useColoringCanvas = (
     };
 
     img.src = imageUrl;
-  }, [imageUrl]);
+  }, [imageUrl, originalImageUrl]);
 
   // 캔버스 클릭 → 플러드 필
   const handleCanvasTap = useCallback(
@@ -348,7 +397,7 @@ const useColoringCanvas = (
       if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) return;
 
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const originalData = historyRef.current[0]?.data;
+      const originalData = originalDataRef.current;
       if (!originalData) return;
 
       const fillColor = hexToRgba(selectedColor);
@@ -410,8 +459,8 @@ const useColoringCanvas = (
     const canvas = canvasRef.current;
     if (!canvas) return 0;
 
-    const initialData = historyRef.current[0];
-    if (!initialData) return 0;
+    const origData = originalDataRef.current;
+    if (!origData) return 0;
 
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
     if (!ctx) return 0;
@@ -427,9 +476,9 @@ const useColoringCanvas = (
       const idx = i * 4;
 
       // 원본 도안에서 윤곽선(어두운 픽셀)은 색칠 대상이 아니므로 제외
-      const origR = initialData.data[idx];
-      const origG = initialData.data[idx + 1];
-      const origB = initialData.data[idx + 2];
+      const origR = origData[idx];
+      const origG = origData[idx + 1];
+      const origB = origData[idx + 2];
       const origLum = getLuminance(origR, origG, origB);
       if (origLum < LINE_BOUNDARY_THRESHOLD) continue;
 
