@@ -9,6 +9,8 @@ import {
   ArtworkDetailOverlay,
   DeleteConfirmModal,
   ShareToast,
+  GalleryView,
+  GalleryDetailOverlay,
 } from "@/components";
 import { useHomePage, useArtworkDetail } from "@/hooks";
 
@@ -68,7 +70,31 @@ function HomePage() {
 
   return (
     <>
-      {hasArtworks ? (
+      {activeTab === "gallery" ? (
+        <div className="relative min-h-dvh">
+          {/* 갤러리 뷰 */}
+          <GalleryView
+            popularArtworks={[]}
+            activityArtworks={[]}
+            viewMode="list"
+            onViewModeChange={() => {}}
+            onArtworkClick={() => {}}
+            onLikeToggle={() => {}}
+            onSeeAllPopular={() => {}}
+            onSeeAllActivity={() => {}}
+          />
+
+          {/* 네비게이션 (갤러리 위에 오버레이) */}
+          <div className="absolute top-0 left-0 w-full z-10">
+            <HomeNavBar
+              activeTab={activeTab}
+              toggleType="LIGHT"
+              onTabChange={handleTabChange}
+              onThemeClick={handleThemeClick}
+            />
+          </div>
+        </div>
+      ) : hasArtworks ? (
         <div className="relative min-h-dvh">
           {/* 미술관 뷰 (테마 배경 + 작품) */}
           <MuseumView

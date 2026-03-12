@@ -40,6 +40,15 @@ import {
   CompletionScreen,
   AchievementModal,
 } from "@/components/completion";
+import {
+  GalleryView,
+  GalleryPopularSection,
+  GalleryPopularCard,
+  GalleryActivitySection,
+  GalleryActivityListItem,
+  GalleryActivityGridItem,
+  GalleryDetailOverlay,
+} from "@/components/gallery";
 
 export {
   ScrollToTop,
@@ -77,4 +86,11 @@ export {
   CompletionScreen,
   AchievementModal,
   ShareToast,
+  GalleryView,
+  GalleryPopularSection,
+  GalleryPopularCard,
+  GalleryActivitySection,
+  GalleryActivityListItem,
+  GalleryActivityGridItem,
+  GalleryDetailOverlay,
 };
