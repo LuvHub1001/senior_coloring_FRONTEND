@@ -90,6 +90,9 @@ const useColoringPlayPage = () => {
   const [zoomPercent, setZoomPercent] = useState(100);
   const zoomToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // 뷰포트 컨테이너 ref (팬 클램핑에 사용)
+  const viewportRef = useRef<HTMLDivElement>(null);
+
   // 패닝(드래그 이동) 상태
   const [panX, setPanX] = useState(0);
   const [panY, setPanY] = useState(0);
@@ -162,7 +165,22 @@ const useColoringPlayPage = () => {
   // }, [rotation]);
 
   useEffect(() => {
-    zoomScaleRef.current = zoomPercent / 100;
+    const scale = zoomPercent / 100;
+    zoomScaleRef.current = scale;
+
+    // 줌 변경 시 팬 값 클램핑 (줌 아웃 시 빈 공간이 보이지 않도록)
+    const wrapper = viewportRef.current;
+    const parent = wrapper?.parentElement;
+    if (wrapper && parent) {
+      const elW = wrapper.clientWidth;
+      const elH = wrapper.clientHeight;
+      const parentW = parent.clientWidth;
+      const parentH = parent.clientHeight;
+      const maxPanX = Math.max(0, (elW * scale - parentW) / 2);
+      const maxPanY = Math.max(0, (elH * scale - parentH) / 2);
+      setPanX((prev) => Math.max(-maxPanX, Math.min(maxPanX, prev)));
+      setPanY((prev) => Math.max(-maxPanY, Math.min(maxPanY, prev)));
+    }
   }, [zoomPercent]);
 
   // 첫 색칠 시 작품 생성 (색칠 안 하면 작품 미생성)
@@ -208,6 +226,7 @@ const useColoringPlayPage = () => {
         completedImageUrl,
         title,
         artworkId: resolvedId,
+        rootArtworkId: locationState.rootArtworkId,
       },
     });
   };
@@ -353,15 +372,43 @@ const useColoringPlayPage = () => {
     [],
   );
 
+  // 팬 값 클램핑 — 확대된 래퍼가 부모 뷰포트 밖으로 빈 공간이 보이지 않도록 제한
+  const clampPan = useCallback(
+    (rawPanX: number, rawPanY: number): { x: number; y: number } => {
+      const wrapper = viewportRef.current;
+      const parent = wrapper?.parentElement;
+      if (!wrapper || !parent) return { x: rawPanX, y: rawPanY };
+
+      const scale = zoomScaleRef.current;
+      // 래퍼 원본 크기 (CSS transform 미적용 레이아웃 크기)
+      const elW = wrapper.clientWidth;
+      const elH = wrapper.clientHeight;
+      // 부모 뷰포트 크기
+      const parentW = parent.clientWidth;
+      const parentH = parent.clientHeight;
+
+      // 확대된 래퍼가 뷰포트보다 클 때만 패닝 가능
+      const maxPanX = Math.max(0, (elW * scale - parentW) / 2);
+      const maxPanY = Math.max(0, (elH * scale - parentH) / 2);
+
+      return {
+        x: Math.max(-maxPanX, Math.min(maxPanX, rawPanX)),
+        y: Math.max(-maxPanY, Math.min(maxPanY, rawPanY)),
+      };
+    },
+    [],
+  );
+
   const handleDragMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       if (!isDraggingRef.current || isPinchingRef.current) return;
       const dx = e.clientX - dragStartXRef.current;
       const dy = e.clientY - dragStartYRef.current;
-      setPanX(panStartXRef.current + dx);
-      setPanY(panStartYRef.current + dy);
+      const clamped = clampPan(panStartXRef.current + dx, panStartYRef.current + dy);
+      setPanX(clamped.x);
+      setPanY(clamped.y);
     },
-    [],
+    [clampPan],
   );
 
   const handleDragEnd = useCallback(() => {
@@ -405,14 +452,13 @@ const useColoringPlayPage = () => {
 
   const zoomScale = zoomPercent / 100;
 
-  // 줌 wrapper 스타일 — 도안 프레임(테두리+그림자) 전체에 적용
+  // 줌 내부 콘텐츠 스타일 — 뷰포트 안에서 스케일 + 패닝
   const hasTransform = zoomScale !== 1 || panX !== 0 || panY !== 0;
   const zoomContainerStyle: React.CSSProperties = {
     transform: hasTransform
       ? `translate(${panX}px, ${panY}px) scale(${zoomScale})`
       : undefined,
     transformOrigin: "center center",
-    touchAction: activeMode === "zoom" ? "none" : undefined,
   };
 
   return {
@@ -464,6 +510,7 @@ const useColoringPlayPage = () => {
     zoomPercent,
     handleZoomIn,
     handleZoomOut,
+    viewportRef,
     zoomContainerStyle,
     handleDragStart,
     handleDragMove,

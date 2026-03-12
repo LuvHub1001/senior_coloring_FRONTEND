@@ -99,12 +99,13 @@ const useColoringBookPage = () => {
     setIsDeleteConfirmOpen(false);
   };
 
-  // 이어 그리기 → 저장된 이미지로 색칠 페이지 이동
+  // 이어 그리기 → 저장된 이미지로 색칠 페이지 이동 (rootArtworkId 유지)
   const handleContinueColoring = () => {
     if (!selectedArtwork) return;
     navigate(`/coloring/${selectedArtwork.designId}`, {
       state: {
         artworkId: selectedArtwork.id,
+        rootArtworkId: selectedArtwork.rootArtworkId,
         savedImageUrl: selectedArtwork.imageUrl,
         title: selectedArtwork.design.title,
         imageUrl: selectedArtwork.design.imageUrl,
@@ -112,7 +113,7 @@ const useColoringBookPage = () => {
     });
   };
 
-  // 전시하기 → 완성 페이지로 이동
+  // 전시하기 → 완성 페이지로 이동 (rootArtworkId 전달하여 원본 삭제)
   const handleExhibit = () => {
     if (!selectedArtwork) return;
     navigate(`/coloring/${selectedArtwork.designId}/complete`, {
@@ -120,6 +121,7 @@ const useColoringBookPage = () => {
         completedImageUrl: selectedArtwork.imageUrl,
         title: selectedArtwork.design.title,
         artworkId: selectedArtwork.id,
+        rootArtworkId: selectedArtwork.rootArtworkId,
       },
     });
   };

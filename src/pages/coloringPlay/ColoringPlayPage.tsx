@@ -62,6 +62,7 @@ function ColoringPlayPage() {
     zoomPercent,
     handleZoomIn,
     handleZoomOut,
+    viewportRef,
     zoomContainerStyle,
     handleDragStart,
     handleDragMove,
@@ -97,10 +98,11 @@ function ColoringPlayPage() {
           </div>
         )}
 
-        {/* 줌 wrapper — 토글 아래 20px 간격 */}
+        {/* 줌 래퍼 — 래퍼+도안이 함께 확대, 부모 overflow-hidden이 뷰포트 역할 */}
         <div
+          ref={viewportRef}
           className="mt-5"
-          style={zoomContainerStyle}
+          style={{ ...zoomContainerStyle, touchAction: activeMode === "zoom" ? "none" : undefined }}
           onPointerDown={activeMode === "zoom" ? handleDragStart : undefined}
           onPointerMove={activeMode === "zoom" ? handleDragMove : undefined}
           onPointerUp={activeMode === "zoom" ? handleDragEnd : undefined}

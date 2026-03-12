@@ -10,6 +10,7 @@ interface CompletionLocationState {
   completedImageUrl?: string;
   title?: string;
   artworkId?: string;
+  rootArtworkId?: string;
 }
 
 const useCompletionPage = () => {
@@ -21,6 +22,7 @@ const useCompletionPage = () => {
   const completedImageUrl = locationState.completedImageUrl ?? "";
   const title = locationState.title ?? "작품";
   const artworkId = locationState.artworkId ?? "";
+  const rootArtworkId = locationState.rootArtworkId;
 
   const { handleShare: shareImage, isShareToastVisible, shareToastMessage } = useShare();
 
@@ -29,7 +31,7 @@ const useCompletionPage = () => {
   // 완성 후 홈 이동 대기 여부 (모달 닫은 뒤 이동하기 위함)
   const [pendingNavigate, setPendingNavigate] = useState(false);
 
-  // 작품 완성 API 호출 — 원본 삭제/피처드 교체는 백엔드에서 자동 처리
+  // 작품 완성 API 호출 — 원본 삭제/피처드 교체는 백엔드에서 rootArtworkId 기반으로 자동 처리
   const completeMutation = useMutation({
     mutationFn: (id: string) => completeArtwork(id),
     onSuccess: async (response) => {
