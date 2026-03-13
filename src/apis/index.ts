@@ -17,10 +17,19 @@ instance.interceptors.request.use((config) => {
 // 토큰 갱신 중복 요청 방지
 let isRefreshing = false;
 let pendingRequests: Array<(token: string) => void> = [];
+let pendingRejects: Array<(reason: unknown) => void> = [];
 
 const processPendingRequests = (token: string) => {
   pendingRequests.forEach((callback) => callback(token));
   pendingRequests = [];
+  pendingRejects = [];
+};
+
+// refresh 실패 시 대기 중인 요청 전부 reject
+const rejectPendingRequests = (error: unknown) => {
+  pendingRejects.forEach((reject) => reject(error));
+  pendingRequests = [];
+  pendingRejects = [];
 };
 
 instance.interceptors.response.use(
@@ -45,12 +54,13 @@ instance.interceptors.response.use(
       }
 
       if (isRefreshing) {
-        // 이미 갱신 중이면 대기열에 추가
-        return new Promise((resolve) => {
+        // 이미 갱신 중이면 대기열에 추가 (reject도 저장하여 실패 시 정리)
+        return new Promise((resolve, reject) => {
           pendingRequests.push((token: string) => {
             originalRequest.headers.Authorization = `Bearer ${token}`;
             resolve(instance(originalRequest));
           });
+          pendingRejects.push(reject);
         });
       }
 
@@ -60,7 +70,8 @@ instance.interceptors.response.use(
       try {
         const { data } = await axios.post<TokenRefreshResponse>(
           `${import.meta.env.VITE_API_BASE_URL}/api/auth/refresh`,
-          { refreshToken }
+          { refreshToken },
+          { timeout: 10000 }
         );
 
         const newAccessToken = data.data.accessToken;
@@ -73,13 +84,14 @@ instance.interceptors.response.use(
         processPendingRequests(newAccessToken);
 
         return instance(originalRequest);
-      } catch {
-        // refresh 실패 시 토큰 제거 후 로그인 페이지로 이동
+      } catch (refreshError) {
+        // refresh 실패 시 대기 중인 요청 전부 reject 후 토큰 제거
+        rejectPendingRequests(refreshError);
         localStorage.removeItem("token");
         localStorage.removeItem("refreshToken");
         // 히스토리에 남지 않도록 replace 사용 (뒤로가기 루프 방지)
         window.location.replace("/");
-        return Promise.reject(error);
+        return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
       }

@@ -5,14 +5,17 @@ const useLogout = () => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
+    // 토큰을 먼저 제거하여 logout API 실패 시 401 → refresh 순환 방지
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+
     try {
       await postLogout();
-    } finally {
-      // API 성공/실패 관계없이 로컬 토큰 제거 후 로그인 페이지로 이동
-      localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
-      navigate("/", { replace: true });
+    } catch {
+      // 로그아웃 API 실패해도 무시 (토큰은 이미 제거됨)
     }
+
+    navigate("/", { replace: true });
   };
 
   return { handleLogout };

@@ -1,14 +1,16 @@
 import { useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const useAuthCallbackPage = () => {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = searchParams.get("token");
-    const refreshToken = searchParams.get("refreshToken");
-    const isNewUser = searchParams.get("isNew") === "true";
+    // hash fragment에서 토큰 파싱 (#token=...&refreshToken=...&isNew=...)
+    // hash fragment는 서버 로그나 Referer 헤더에 포함되지 않아 토큰 노출 방지
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const token = hashParams.get("token");
+    const refreshToken = hashParams.get("refreshToken");
+    const isNewUser = hashParams.get("isNew") === "true";
 
     if (token) {
       localStorage.setItem("token", token);
@@ -20,10 +22,13 @@ const useAuthCallbackPage = () => {
       window.history.replaceState({}, document.title, window.location.pathname);
 
       navigate("/home", { replace: true, state: { isNewUser } });
+    } else if (localStorage.getItem("token")) {
+      // StrictMode 재실행 시 hash가 이미 제거됐지만 토큰은 저장된 상태
+      navigate("/home", { replace: true });
     } else {
       navigate("/", { replace: true });
     }
-  }, [searchParams, navigate]);
+  }, [navigate]);
 };
 
 export { useAuthCallbackPage };

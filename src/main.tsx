@@ -7,15 +7,17 @@ import App from './App.tsx'
 
 // API 에러 응답에서 한국어 메시지 변환
 const getErrorMessage = (error: unknown): string => {
-  // axios 에러인 경우
-  if (error && typeof error === "object" && "response" in error) {
-    const axiosError = error as { response?: { status?: number }; code?: string };
-    const status = axiosError.response?.status;
+  // axios 에러인 경우 (response 또는 code 속성으로 판별)
+  if (error && typeof error === "object") {
+    const err = error as Record<string, unknown>;
+    const response = err.response as Record<string, unknown> | undefined;
+    const status = typeof response?.status === "number" ? response.status : undefined;
+    const code = typeof err.code === "string" ? err.code : undefined;
 
-    if (!axiosError.response && axiosError.code === "ERR_NETWORK") {
+    if (!response && code === "ERR_NETWORK") {
       return "네트워크 연결을 확인해 주세요.";
     }
-    if (axiosError.code === "ECONNABORTED") {
+    if (code === "ECONNABORTED") {
       return "요청 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.";
     }
     if (status === 400) return "잘못된 요청입니다.";
