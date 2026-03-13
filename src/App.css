@@ -126,3 +126,16 @@
     opacity: 1;
   }
 }
+
+/* 갤러리 반짝이 파티클 애니메이션 */
+@keyframes sparkle-fade {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}

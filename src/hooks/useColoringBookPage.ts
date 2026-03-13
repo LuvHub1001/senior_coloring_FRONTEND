@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDesignList, useDesignDetail, useDesignCategories } from "@/hooks/useDesigns";
@@ -77,30 +77,33 @@ const useColoringBookPage = () => {
     [designs],
   );
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     navigate("/home");
-  };
+  }, [navigate]);
 
-  const handleCategorySelect = (category: string) => {
+  const handleCategorySelect = useCallback((category: string) => {
     setSelectedCategory(category);
-  };
+  }, []);
 
   // 진행중 카드 클릭 → 프리뷰 모달 열기
-  const handleProgressItemClick = (id: string) => {
-    const artwork = inProgressArtworks.find((a) => a.id === id);
-    if (artwork) {
-      setSelectedArtwork(artwork);
-    }
-  };
+  const handleProgressItemClick = useCallback(
+    (id: string) => {
+      const artwork = inProgressArtworks.find((a) => a.id === id);
+      if (artwork) {
+        setSelectedArtwork(artwork);
+      }
+    },
+    [inProgressArtworks],
+  );
 
-  const handleClosePreview = () => {
+  const handleClosePreview = useCallback(() => {
     setSelectedArtwork(null);
     setIsMoreMenuOpen(false);
     setIsDeleteConfirmOpen(false);
-  };
+  }, []);
 
   // 이어 그리기 → 저장된 이미지로 색칠 페이지 이동 (rootArtworkId 유지)
-  const handleContinueColoring = () => {
+  const handleContinueColoring = useCallback(() => {
     if (!selectedArtwork) return;
     navigate(`/coloring/${selectedArtwork.designId}`, {
       state: {
@@ -111,10 +114,10 @@ const useColoringBookPage = () => {
         imageUrl: selectedArtwork.design.imageUrl,
       },
     });
-  };
+  }, [selectedArtwork, navigate]);
 
   // 전시하기 → 완성 페이지로 이동 (rootArtworkId 전달하여 원본 삭제)
-  const handleExhibit = () => {
+  const handleExhibit = useCallback(() => {
     if (!selectedArtwork) return;
     navigate(`/coloring/${selectedArtwork.designId}/complete`, {
       state: {
@@ -124,53 +127,53 @@ const useColoringBookPage = () => {
         rootArtworkId: selectedArtwork.rootArtworkId,
       },
     });
-  };
+  }, [selectedArtwork, navigate]);
 
-  const handleToggleMoreMenu = () => {
+  const handleToggleMoreMenu = useCallback(() => {
     setIsMoreMenuOpen((prev) => !prev);
-  };
+  }, []);
 
-  // 삭제 메뉴 클릭 → 확인 모달 열기
-  const handleDeleteClick = () => {
+  // 삭제 메뉴 클릭 → 인라인 확인 다이얼로그 열기
+  const handleDeleteClick = useCallback(() => {
     setIsMoreMenuOpen(false);
     setIsDeleteConfirmOpen(true);
-  };
+  }, []);
 
   // 삭제 확인 → 실제 삭제 실행
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = useCallback(() => {
     if (!selectedArtwork) return;
     deleteMutation.mutate(selectedArtwork.id);
-  };
+  }, [selectedArtwork, deleteMutation]);
 
   // 삭제 취소
-  const handleDeleteCancel = () => {
+  const handleDeleteCancel = useCallback(() => {
     setIsDeleteConfirmOpen(false);
-  };
+  }, []);
 
-  const handleShareArtwork = async () => {
+  const handleShareArtwork = useCallback(async () => {
     if (!selectedArtwork) return;
     setIsMoreMenuOpen(false);
     await shareImage(selectedArtwork.imageUrl ?? "", goldFrame);
-  };
+  }, [selectedArtwork, shareImage]);
 
   // 도안 클릭 → 상세 모달 열기
-  const handleColoringItemClick = (id: string) => {
+  const handleColoringItemClick = useCallback((id: string) => {
     setSelectedDesignId(id);
-  };
+  }, []);
 
   // 상세 모달 닫기
-  const handleCloseDesignDetail = () => {
+  const handleCloseDesignDetail = useCallback(() => {
     setSelectedDesignId(null);
-  };
+  }, []);
 
   // 상세 모달에서 색칠하기 시작
-  const handleStartColoring = () => {
+  const handleStartColoring = useCallback(() => {
     if (!selectedDesign) return;
     setSelectedDesignId(null);
     navigate(`/coloring/${selectedDesign.id}`, {
       state: { imageUrl: selectedDesign.imageUrl, title: selectedDesign.title },
     });
-  };
+  }, [selectedDesign, navigate]);
 
   return {
     categories,

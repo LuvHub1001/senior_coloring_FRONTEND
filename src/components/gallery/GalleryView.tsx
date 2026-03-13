@@ -1,3 +1,4 @@
+import { useRef, useCallback } from "react";
 import { GalleryPopularSection } from "@/components/gallery/GalleryPopularSection";
 import { GalleryActivitySection } from "@/components/gallery/GalleryActivitySection";
 
@@ -20,6 +21,7 @@ interface GalleryViewProps {
   onLikeToggle: (artworkId: string) => void;
   onSeeAllPopular: () => void;
   onSeeAllActivity: () => void;
+  onLoadMore?: () => void;
 }
 
 function GalleryView({
@@ -31,14 +33,25 @@ function GalleryView({
   onLikeToggle,
   onSeeAllPopular,
   onSeeAllActivity,
+  onLoadMore,
 }: GalleryViewProps) {
+  // 무한스크롤: 스크롤 끝 감지
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el || !onLoadMore) return;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 200) {
+      onLoadMore();
+    }
+  }, [onLoadMore]);
+
   return (
     <div className="flex flex-col min-h-dvh bg-[#F3F5F7]">
       {/* NavBar 높이만큼 상단 여백 (64px + safe area) */}
       <div className="h-[64px] shrink-0" />
 
       {/* 스크롤 영역 */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto">
         {/* 오늘의 인기 작품 */}
         <GalleryPopularSection
           artworks={popularArtworks}

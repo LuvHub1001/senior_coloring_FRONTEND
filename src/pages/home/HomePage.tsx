@@ -12,7 +12,7 @@ import {
   GalleryView,
   GalleryDetailOverlay,
 } from "@/components";
-import { useHomePage, useArtworkDetail } from "@/hooks";
+import { useHomePage, useArtworkDetail, useGallery } from "@/hooks";
 
 function HomePage() {
   const {
@@ -57,6 +57,20 @@ function HomePage() {
     shareToastMessage,
   } = useArtworkDetail(frameImageUrl);
 
+  const {
+    viewMode,
+    selectedArtworkId: gallerySelectedId,
+    popularArtworks,
+    activityArtworks,
+    selectedDetail: galleryDetail,
+    handleViewModeChange,
+    handleArtworkClick,
+    handleLikeToggle,
+    handleDetailLikeToggle,
+    handleCloseDetail: handleGalleryDetailClose,
+    handleLoadMore,
+  } = useGallery(activeTab === "gallery");
+
   if (showWelcome) {
     return (
       <WelcomeOverlay
@@ -74,14 +88,15 @@ function HomePage() {
         <div className="relative min-h-dvh">
           {/* 갤러리 뷰 */}
           <GalleryView
-            popularArtworks={[]}
-            activityArtworks={[]}
-            viewMode="list"
-            onViewModeChange={() => {}}
-            onArtworkClick={() => {}}
-            onLikeToggle={() => {}}
+            popularArtworks={popularArtworks}
+            activityArtworks={activityArtworks}
+            viewMode={viewMode}
+            onViewModeChange={handleViewModeChange}
+            onArtworkClick={handleArtworkClick}
+            onLikeToggle={handleLikeToggle}
             onSeeAllPopular={() => {}}
             onSeeAllActivity={() => {}}
+            onLoadMore={handleLoadMore}
           />
 
           {/* 네비게이션 (갤러리 위에 오버레이) */}
@@ -192,6 +207,20 @@ function HomePage() {
       )}
 
       <ShareToast isVisible={isShareToastVisible} message={shareToastMessage} />
+
+      {/* 갤러리 작품 상세 오버레이 */}
+      {gallerySelectedId !== null && galleryDetail && (
+        <GalleryDetailOverlay
+          title={galleryDetail.title}
+          authorName={galleryDetail.author.nickname}
+          timeAgo={galleryDetail.timeAgo}
+          imageUrl={galleryDetail.imageUrl}
+          likeCount={galleryDetail.likeCount}
+          isLiked={galleryDetail.isLiked}
+          onClose={handleGalleryDetailClose}
+          onLikeToggle={handleDetailLikeToggle}
+        />
+      )}
     </>
   );
 }

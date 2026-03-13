@@ -31,3 +31,13 @@ export type {
   ThemeSelectResponse,
 } from "./ThemeType";
 export type { ToolType } from "./ColoringPlayType";
+export type {
+  GalleryAuthor,
+  GalleryArtwork,
+  GalleryArtworkDetail,
+  GalleryListResponse,
+  GalleryPopularResponse,
+  GalleryDetailResponse,
+  GalleryLikeResponse,
+  GalleryPublishResponse,
+} from "./GalleryType";

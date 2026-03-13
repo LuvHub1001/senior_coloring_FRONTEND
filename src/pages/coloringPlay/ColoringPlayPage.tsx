@@ -35,9 +35,6 @@ function ColoringPlayPage() {
     handleRedo,
     handlePalette,
     handleResetClick,
-    handleResetConfirm,
-    handleResetCancel,
-    isResetModalOpen,
     handleCollapse,
     isToolBarCollapsed,
     isPaletteOpen,
@@ -198,15 +195,6 @@ function ColoringPlayPage() {
         <SaveConfirmModal
           onConfirm={handleBackConfirm}
           onCancel={handleBackCancel}
-        />
-      )}
-      {/* 리셋 확인 모달 */}
-      {isResetModalOpen && (
-        <SaveConfirmModal
-          title="초기화하시겠어요?"
-          description="지금까지 한 작업이 초기화 됩니다."
-          onConfirm={handleResetConfirm}
-          onCancel={handleResetCancel}
         />
       )}
     </div>

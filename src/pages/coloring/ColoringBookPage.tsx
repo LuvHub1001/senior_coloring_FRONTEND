@@ -5,7 +5,6 @@ import {
   ColoringItemGrid,
   ArtworkPreviewModal,
   DesignDetailModal,
-  DeleteConfirmModal,
   ShareToast,
 } from "@/components";
 import { useColoringBookPage } from "@/hooks";
@@ -88,20 +87,15 @@ function ColoringBookPage() {
         <ArtworkPreviewModal
           artwork={selectedArtwork}
           isMoreMenuOpen={isMoreMenuOpen}
+          isDeleteConfirmOpen={isDeleteConfirmOpen}
           onClose={handleClosePreview}
           onContinue={handleContinueColoring}
           onExhibit={handleExhibit}
           onToggleMoreMenu={handleToggleMoreMenu}
           onShare={handleShareArtwork}
           onDelete={handleDeleteClick}
-        />
-      )}
-
-      {/* 삭제 확인 모달 */}
-      {isDeleteConfirmOpen && (
-        <DeleteConfirmModal
-          onCancel={handleDeleteCancel}
-          onConfirm={handleDeleteConfirm}
+          onDeleteConfirm={handleDeleteConfirm}
+          onDeleteCancel={handleDeleteCancel}
         />
       )}
 

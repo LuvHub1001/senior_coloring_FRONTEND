@@ -108,3 +108,10 @@ export {
 export { getThemes, selectTheme } from "@/apis/ThemeFetcher";
 export { getUserProfile } from "@/apis/UserFetcher";
 export { postRefreshToken, postLogout } from "@/apis/AuthFetcher";
+export {
+  getGalleryArtworks,
+  getGalleryPopular,
+  getGalleryArtworkDetail,
+  toggleGalleryLike,
+  publishArtwork,
+} from "@/apis/GalleryFetcher";

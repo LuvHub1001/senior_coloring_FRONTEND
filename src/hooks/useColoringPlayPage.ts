@@ -191,7 +191,6 @@ const useColoringPlayPage = () => {
   }, [isLoading, artworkId, id, hasColoredAnything, handleCreateArtwork]);
 
   const [isBackModalOpen, setIsBackModalOpen] = useState(false);
-  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
 
   // 뒤로가기 버튼 → 이번 세션에서 색칠한 게 있으면 모달, 없으면 바로 이동
   const handleBack = () => {
@@ -291,21 +290,12 @@ const useColoringPlayPage = () => {
     });
   };
 
-  // 리셋 버튼 → 색칠한 게 있으면 확인 모달, 없으면 무시
+  // 리셋 버튼 → 바로 초기화 (복구 버튼으로 되돌릴 수 있음)
   const handleResetClick = useCallback(() => {
     if (hasColoredAnything) {
-      setIsResetModalOpen(true);
+      handleReset();
     }
-  }, [hasColoredAnything]);
-
-  const handleResetConfirm = useCallback(() => {
-    handleReset();
-    setIsResetModalOpen(false);
-  }, [handleReset]);
-
-  const handleResetCancel = useCallback(() => {
-    setIsResetModalOpen(false);
-  }, []);
+  }, [hasColoredAnything, handleReset]);
 
   // 모드 전환 — 확대 모드 진입 시 토스트 3초 노출, 색칠 모드 복귀 시 줌/팬 초기화
   const handleModeChange = useCallback((mode: "color" | "zoom") => {
@@ -482,9 +472,6 @@ const useColoringPlayPage = () => {
     handleRedo,
     handlePalette,
     handleResetClick,
-    handleResetConfirm,
-    handleResetCancel,
-    isResetModalOpen,
     handleCollapse,
     isToolBarCollapsed,
     isPaletteOpen,

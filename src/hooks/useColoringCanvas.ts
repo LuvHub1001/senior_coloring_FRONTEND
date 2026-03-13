@@ -291,6 +291,9 @@ const useColoringCanvas = (
   const isDrawingRef = useRef(false);
   const lastPosRef = useRef<{ x: number; y: number } | null>(null);
 
+  // 영역 제한 마스크 — 브러시 시작 시 해당 영역만 색칠 허용
+  const regionMaskRef = useRef<Uint8Array | null>(null);
+
   // floodFill 재사용 버퍼 (GC 부담 감소)
   const fillBuffersRef = useRef<{ visited: Uint8Array; boundary: Uint8Array; closed: Uint8Array } | null>(null);
 
@@ -462,6 +465,93 @@ const useColoringCanvas = (
     return Math.min(Math.round((colored / fillable) * 100), 100);
   }, []);
 
+  // 브러시 시작점 기준 영역 마스크 생성 — flood fill과 동일한 경계 감지로 색칠 가능 영역 판별
+  const buildRegionMask = useCallback(
+    (startX: number, startY: number): Uint8Array | null => {
+      const canvas = canvasRef.current;
+      if (!canvas) return null;
+
+      const origData = originalDataRef.current;
+      if (!origData) return null;
+
+      const width = canvas.width;
+      const height = canvas.height;
+      const totalPixels = width * height;
+
+      // 시작점이 윤곽선 위이면 마스크 생성 불가
+      const startIdx = (startY * width + startX) * 4;
+      const startLum = getLuminance(origData[startIdx], origData[startIdx + 1], origData[startIdx + 2]);
+      if (startLum < LINE_BOUNDARY_THRESHOLD) return null;
+
+      // 경계 맵 구축 (원본 도안 기준)
+      const boundary = new Uint8Array(totalPixels);
+      for (let i = 0; i < totalPixels; i++) {
+        const idx = i * 4;
+        const lum = getLuminance(origData[idx], origData[idx + 1], origData[idx + 2]);
+        if (lum < LINE_BOUNDARY_THRESHOLD) {
+          boundary[i] = 1;
+        }
+      }
+
+      // 멀티패스 갭 닫기 (floodFill과 동일한 로직)
+      const GAP_CLOSE_PASSES = 3;
+      for (let pass = 0; pass < GAP_CLOSE_PASSES; pass++) {
+        const prev = new Uint8Array(boundary);
+        let changed = false;
+        for (let y = 0; y < height; y++) {
+          for (let x = 0; x < width; x++) {
+            const pi = y * width + x;
+            if (boundary[pi]) continue;
+            const closedH = x > 0 && x < width - 1 && prev[pi - 1] && prev[pi + 1];
+            const closedV = y > 0 && y < height - 1 && prev[pi - width] && prev[pi + width];
+            const closedD1 = x > 0 && y > 0 && x < width - 1 && y < height - 1 && prev[pi - width - 1] && prev[pi + width + 1];
+            const closedD2 = x > 0 && y > 0 && x < width - 1 && y < height - 1 && prev[pi - width + 1] && prev[pi + width - 1];
+            if (closedH || closedV || closedD1 || closedD2) {
+              boundary[pi] = 1;
+              changed = true;
+            }
+          }
+        }
+        if (!changed) break;
+      }
+
+      // 스캔라인 flood fill로 마스크 생성
+      const mask = new Uint8Array(totalPixels);
+      const stack: number[] = [startX, startY];
+
+      while (stack.length > 0) {
+        const y = stack.pop()!;
+        let x = stack.pop()!;
+        while (x > 0 && !boundary[y * width + x - 1] && !mask[y * width + x - 1]) x--;
+
+        let spanAbove = false;
+        let spanBelow = false;
+
+        while (x < width) {
+          const pi = y * width + x;
+          if (boundary[pi] || mask[pi]) break;
+
+          mask[pi] = 1;
+
+          if (y > 0) {
+            if (!boundary[(y - 1) * width + x] && !mask[(y - 1) * width + x]) {
+              if (!spanAbove) { stack.push(x, y - 1); spanAbove = true; }
+            } else { spanAbove = false; }
+          }
+          if (y < height - 1) {
+            if (!boundary[(y + 1) * width + x] && !mask[(y + 1) * width + x]) {
+              if (!spanBelow) { stack.push(x, y + 1); spanBelow = true; }
+            } else { spanBelow = false; }
+          }
+          x++;
+        }
+      }
+
+      return mask;
+    },
+    [],
+  );
+
   // 포인터 이벤트 좌표 → 캔버스 픽셀 좌표 변환
   const getCanvasCoords = useCallback(
     (clientX: number, clientY: number): { x: number; y: number } | null => {
@@ -542,8 +632,9 @@ const useColoringCanvas = (
       const { data } = imageData;
 
       if (tool === "brush") {
-        // 붓: 선택한 색상으로 그리기 (원본 도안의 선은 보존)
+        // 붓: 선택한 색상으로 그리기 (원본 도안의 선은 보존 + 영역 마스크 제한)
         const color = hexToRgba(selectedColor);
+        const mask = regionMaskRef.current;
 
         for (let s = 0; s <= steps; s++) {
           const t = steps === 0 ? 0 : s / steps;
@@ -556,6 +647,8 @@ const useColoringCanvas = (
               const px = cx + rx;
               const py = cy + ry;
               if (px < minX || px > maxX || py < minY || py > maxY) continue;
+              // 영역 마스크가 있으면 해당 영역 내 픽셀만 허용
+              if (mask && !mask[py * canvasW + px]) continue;
               // 원본 도안에서 경계선(어두운 픽셀)이면 건너뜀
               const origIdx = (py * canvasW + px) * 4;
               const lum = getLuminance(origData[origIdx], origData[origIdx + 1], origData[origIdx + 2]);
@@ -675,13 +768,20 @@ const useColoringCanvas = (
       isDrawingRef.current = true;
       lastPosRef.current = coords;
 
+      // 브러시 도구일 때 시작점 기준 영역 마스크 생성
+      if (activeTool === "brush") {
+        regionMaskRef.current = buildRegionMask(coords.x, coords.y);
+      } else {
+        regionMaskRef.current = null;
+      }
+
       // 첫 점 찍기
       drawStroke(ctx, coords, coords, activeTool);
 
       // 포인터 캡처로 캔버스 밖 이동도 추적
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
     },
-    [activeTool, isImageLoaded, getCanvasCoords, drawStroke],
+    [activeTool, isImageLoaded, getCanvasCoords, drawStroke, buildRegionMask],
   );
 
   const handlePointerMove = useCallback(
@@ -708,6 +808,7 @@ const useColoringCanvas = (
 
     isDrawingRef.current = false;
     lastPosRef.current = null;
+    regionMaskRef.current = null;
 
     // 스트로크 완료 후 히스토리에 저장
     saveSnapshot();

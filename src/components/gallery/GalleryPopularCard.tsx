@@ -1,3 +1,6 @@
+import heartIcon from "@images/exhibition/heart.svg";
+import heartEmptyIcon from "@images/exhibition/heart_empty.svg";
+
 interface GalleryPopularCardProps {
   imageUrl: string;
   title: string;
@@ -24,7 +27,7 @@ function GalleryPopularCard({
       className="shrink-0 w-[218px] rounded-[20px] bg-[rgba(253,253,255,0.75)] shadow-[0px_8px_32px_0px_rgba(0,0,0,0.08)] overflow-hidden cursor-pointer text-left"
     >
       {/* 썸네일 이미지 */}
-      <div className="h-[160px] w-full overflow-hidden bg-gradient-to-b from-white/20 to-white/40">
+      <div className="h-[160px] w-full overflow-hidden bg-gradient-to-b from-[rgba(255,255,255,0.2)] to-[rgba(255,255,255,0.4)]">
         <img
           src={imageUrl}
           alt={title}
@@ -47,20 +50,17 @@ function GalleryPopularCard({
             {timeAgo}
           </span>
           {/* 좋아요 */}
-          <div className="flex items-center gap-[4px] shrink-0">
-            <svg
-              width="12"
-              height="11"
-              viewBox="0 0 12 11"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+          <div className="flex items-center gap-[4px] shrink-0 h-[16px]">
+            <img
+              src={isLiked ? heartIcon : heartEmptyIcon}
+              alt="좋아요"
+              className="block w-[12px] h-[10.5px]"
+            />
+            <span
+              className={`text-[13px] font-[500] leading-[19.5px] tracking-[-0.065px] text-right ${
+                isLiked ? "text-[#F66571]" : "text-[#6B7280]"
+              }`}
             >
-              <path
-                d="M6 10.125S1.5 7.425 1.5 4.469A2.656 2.656 0 0 1 6 2.614a2.656 2.656 0 0 1 4.5 1.855c0 2.956-4.5 5.656-4.5 5.656z"
-                fill={isLiked ? "#F66571" : "#B0B8C1"}
-              />
-            </svg>
-            <span className="text-[13px] font-[500] leading-[19.5px] tracking-[-0.065px] text-[#6B7280]">
               {likeCount}
             </span>
           </div>
