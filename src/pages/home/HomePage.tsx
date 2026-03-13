@@ -84,9 +84,19 @@ function HomePage() {
 
   return (
     <>
-      {activeTab === "gallery" ? (
-        <div className="relative min-h-dvh">
-          {/* 갤러리 뷰 */}
+      <div className="relative min-h-dvh">
+        {/* 네비게이션 (항상 동일 인스턴스 유지 — 토글 트랜지션 보장) */}
+        <div className="absolute top-0 left-0 w-full z-10">
+          <HomeNavBar
+            activeTab={activeTab}
+            toggleType={activeTab === "gallery" ? "LIGHT" : toggleType}
+            onTabChange={handleTabChange}
+            onThemeClick={handleThemeClick}
+          />
+        </div>
+
+        {/* 콘텐츠 영역 */}
+        {activeTab === "gallery" ? (
           <GalleryView
             popularArtworks={popularArtworks}
             activityArtworks={activityArtworks}
@@ -98,20 +108,7 @@ function HomePage() {
             onSeeAllActivity={() => {}}
             onLoadMore={handleLoadMore}
           />
-
-          {/* 네비게이션 (갤러리 위에 오버레이) */}
-          <div className="absolute top-0 left-0 w-full z-10">
-            <HomeNavBar
-              activeTab={activeTab}
-              toggleType="LIGHT"
-              onTabChange={handleTabChange}
-              onThemeClick={handleThemeClick}
-            />
-          </div>
-        </div>
-      ) : hasArtworks ? (
-        <div className="relative min-h-dvh">
-          {/* 미술관 뷰 (테마 배경 + 작품) */}
+        ) : hasArtworks ? (
           <MuseumView
             userName={userName}
             artworkCount={completedArtworks.length}
@@ -130,48 +127,30 @@ function HomePage() {
               if (featuredArtwork) handleOpenDetail(featuredArtwork);
             }}
           />
+        ) : (
+          <div
+            className="flex flex-col min-h-dvh bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${selectedThemeImageUrl})` }}
+          >
+            {/* NavBar 높이만큼 여백 */}
+            <div className="h-[64px] shrink-0" />
 
-          {/* 네비게이션 (미술관 위에 오버레이) */}
-          <div className="absolute top-0 left-0 w-full z-10">
-            <HomeNavBar
-              activeTab={activeTab}
-              toggleType={toggleType}
-              onTabChange={handleTabChange}
-              onThemeClick={handleThemeClick}
+            <HomeTitle
+              userName={userName}
+              subtitle="그림을 그려서 내 미술관에 전시해요"
+              textColor={textColor}
+            />
+
+            <EmptyArtworkFrame frameImageUrl={frameImageUrl} onClick={handleCreateArtwork} />
+
+            <CreateArtworkButton
+              onClick={handleCreateArtwork}
+              buttonColor={buttonColor}
+              buttonTextColor={buttonTextColor}
             />
           </div>
-        </div>
-      ) : (
-        <div
-          className="flex flex-col min-h-dvh bg-cover bg-center bg-no-repeat relative"
-          style={{ backgroundImage: `url(${selectedThemeImageUrl})` }}
-        >
-          {/* 네비게이션 */}
-          <HomeNavBar
-            activeTab={activeTab}
-            toggleType={toggleType}
-            onTabChange={handleTabChange}
-            onThemeClick={handleThemeClick}
-          />
-
-          {/* 타이틀 */}
-          <HomeTitle
-            userName={userName}
-            subtitle="그림을 그려서 내 미술관에 전시해요"
-            textColor={textColor}
-          />
-
-          {/* 빈 액자 */}
-          <EmptyArtworkFrame frameImageUrl={frameImageUrl} onClick={handleCreateArtwork} />
-
-          {/* 하단 버튼 */}
-          <CreateArtworkButton
-            onClick={handleCreateArtwork}
-            buttonColor={buttonColor}
-            buttonTextColor={buttonTextColor}
-          />
-        </div>
-      )}
+        )}
+      </div>
 
       {/* 전시관 테마 선택 바텀시트 */}
       <ThemeBottomSheet
