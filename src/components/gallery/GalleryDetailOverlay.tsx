@@ -200,6 +200,7 @@ function GalleryDetailOverlay({
             <img
               src={imageUrl}
               alt={title}
+              loading="lazy"
               className="size-full object-cover"
             />
           </div>

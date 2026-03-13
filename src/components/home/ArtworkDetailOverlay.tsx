@@ -104,6 +104,7 @@ function ArtworkDetailOverlay({
           <img
             src={imageUrl}
             alt={title}
+            loading="lazy"
             className="h-[590px] w-full object-cover"
           />
         </div>

@@ -24,7 +24,7 @@ const useSliderDrag = (onChange: (percent: number) => void) => {
         bar.removeEventListener("pointermove", onMove);
         bar.removeEventListener("pointerup", onUp);
       };
-      bar.addEventListener("pointermove", onMove);
+      bar.addEventListener("pointermove", onMove, { passive: true });
       bar.addEventListener("pointerup", onUp);
     },
     [onChange],

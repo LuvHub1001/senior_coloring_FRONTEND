@@ -42,7 +42,7 @@ function PublicRouter() {
   return (
     <BrowserRouter>
       <ScrollToTop />
-      <Suspense>
+      <Suspense fallback={<div />}>
         <Routes>
           <Route path="/" element={<LoginPage />} />
           <Route path="/home" element={<HomePage />} />

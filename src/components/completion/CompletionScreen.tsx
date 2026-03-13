@@ -57,6 +57,7 @@ function CompletionScreen({
             <img
               src={artworkImageUrl}
               alt="완성된 작품"
+              loading="lazy"
               className="size-full object-cover"
             />
           </div>

@@ -15,6 +15,10 @@ const useAuthCallbackPage = () => {
       if (refreshToken) {
         localStorage.setItem("refreshToken", refreshToken);
       }
+
+      // URL에서 토큰 정보 제거 (브라우저 히스토리에 토큰이 남지 않도록)
+      window.history.replaceState({}, document.title, window.location.pathname);
+
       navigate("/home", { replace: true, state: { isNewUser } });
     } else {
       navigate("/", { replace: true });

@@ -39,7 +39,8 @@ instance.interceptors.response.use(
       if (!refreshToken) {
         // refresh token 없으면 로그인 페이지로 이동
         localStorage.removeItem("token");
-        window.location.href = "/";
+        // 히스토리에 남지 않도록 replace 사용 (뒤로가기 루프 방지)
+        window.location.replace("/");
         return Promise.reject(error);
       }
 
@@ -76,7 +77,8 @@ instance.interceptors.response.use(
         // refresh 실패 시 토큰 제거 후 로그인 페이지로 이동
         localStorage.removeItem("token");
         localStorage.removeItem("refreshToken");
-        window.location.href = "/";
+        // 히스토리에 남지 않도록 replace 사용 (뒤로가기 루프 방지)
+        window.location.replace("/");
         return Promise.reject(error);
       } finally {
         isRefreshing = false;

@@ -107,6 +107,7 @@ function MuseumView({
             <img
               src={featuredImageUrl}
               alt="전시된 작품"
+              loading="lazy"
               className="size-full object-cover"
             />
           </button>

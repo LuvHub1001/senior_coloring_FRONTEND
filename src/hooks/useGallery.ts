@@ -46,7 +46,7 @@ const useGallery = (enabled: boolean = true) => {
     queryKey: ["gallery", "popular"],
     queryFn: () => getGalleryPopular(10),
     enabled,
-    staleTime: 0,
+    staleTime: 1000 * 60 * 2,
   });
 
   // 활동 모아보기 (무한스크롤)
