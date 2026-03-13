@@ -16,6 +16,7 @@ import { useArtworkDetail } from "@/hooks/useArtworkDetail";
 import { useShare } from "@/hooks/useShare";
 import { useSliderDrag } from "@/hooks/useSliderDrag";
 import { useGallery } from "@/hooks/useGallery";
+import { useErrorToast, showErrorToast } from "@/hooks/useErrorToast";
 
 export {
   useImageCarousel,
@@ -38,4 +39,6 @@ export {
   useShare,
   useSliderDrag,
   useGallery,
+  useErrorToast,
+  showErrorToast,
 };

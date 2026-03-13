@@ -1,4 +1,4 @@
-import { ScrollToTop, ShareToast } from "@/components/common";
+import { ScrollToTop, ShareToast, ErrorToast, ErrorBoundary } from "@/components/common";
 import { LoginLanding } from "@/components/login";
 import {
   HomeNavBar,
@@ -93,4 +93,6 @@ export {
   GalleryActivityListItem,
   GalleryActivityGridItem,
   GalleryDetailOverlay,
+  ErrorToast,
+  ErrorBoundary,
 };
