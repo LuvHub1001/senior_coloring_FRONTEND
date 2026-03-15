@@ -22,7 +22,6 @@ const useCompletionPage = () => {
   const completedImageUrl = locationState.completedImageUrl ?? "";
   const title = locationState.title ?? "작품";
   const artworkId = locationState.artworkId ?? "";
-  const rootArtworkId = locationState.rootArtworkId;
 
   const { handleShare: shareImage, isShareToastVisible, shareToastMessage } = useShare();
 
